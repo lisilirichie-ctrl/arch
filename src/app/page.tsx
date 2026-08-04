@@ -43,9 +43,20 @@ export default function Home() {
   return (
     <main className="bg-[#0D0F12] text-white">
 
+      {/*
+        LIQUID GLASS
+        Pure CSS glassmorphism (blur + saturate + gradient sheen).
+        Uses backdrop-filter, which is supported on Chrome/Android,
+        Firefox, and Safari/iOS alike — so it renders the same on
+        both platforms. It is not Apple's native SwiftUI "Liquid
+        Glass" API (that one is iOS-only and unreachable from web),
+        but this reproduces the same visual language everywhere.
+      */}
+
+
       {/* ================= NAVBAR ================= */}
 
-      <nav className="fixed top-0 left-0 z-50 w-full border-b border-white/10 bg-[#0D0F12]/40 backdrop-blur-xl">
+      <nav className="liquid-glass fixed top-0 left-0 z-50 w-full !rounded-none border-x-0 border-t-0">
 
         <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-6 lg:px-8">
 
@@ -187,7 +198,7 @@ xl:text-7xlfont-semibold leading-[0.95] tracking-tight">
 
               <Link
                 href="/contact"
-                className="rounded-full border border-white/20 px-8 py-4 transition hover:bg-white/10"
+                className="liquid-glass rounded-full px-8 py-4 transition hover:scale-[1.02]"
               >
                 Contact Us
               </Link>
@@ -224,132 +235,7 @@ xl:text-7xlfont-semibold leading-[0.95] tracking-tight">
 
       </section>
 
-      {/* ================= ABOUT ================= */}
-
-<section className="bg-[#0D0F12] py-28">
-
-  <div className="mx-auto grid max-w-7xl gap-20 px-6 lg:grid-cols-2 lg:px-8">
-
-    <div>
-
-      <p className="mb-4 uppercase tracking-[0.35em] text-[#D4A537] text-sm">
-
-        WHO WE ARE
-
-      </p>
-
-      <h2 className="text-[2rem] md:text-[2.7rem] lg:text-[3.2rem] font-medium leading-[1.08] tracking-tight">
-
-        Engineering Excellence.
-        <br />
-        Built On Trust.
-
-      </h2>
-
-    </div>
-
-    <div>
-
-      <p className="text-base
-leading-8
-max-w-xl text-white/70">
-
-        ArchStruc Group is a multidisciplinary engineering and
-        construction company committed to delivering innovative,
-        sustainable and high-quality developments.
-
-      </p>
-
-      <p className="mt-8 text-lg leading-9 text-white/70">
-
-        From residential homes and commercial buildings to
-        infrastructure projects, we combine technical precision,
-        creativity and decades of practical experience.
-
-      </p>
-
-      <Link
-        href="/about"
-        className="mt-12 inline-flex items-center gap-3 text-[#D4A537] transition hover:gap-5"
-      >
-
-        Learn More
-
-        →
-
-      </Link>
-
-    </div>
-
-  </div>
-
-</section>
-
-{/* ================= SERVICES ================= */}
-
-<section className="bg-black py-28">
-
-<div className="mx-auto max-w-7xl px-6 lg:px-8">
-
-<p className="uppercase tracking-[0.35em] text-[#D4A537] text-sm">
-
-OUR SERVICES
-
-</p>
-
-<h2 className="mt-4 text-5xl font-medium">
-
-What We Do
-
-</h2>
-
-<div className="mt-20 grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-
-{[
-"Construction",
-"Architecture",
-"Project Management",
-"Civil Engineering",
-"Interior Design",
-"Renovation"
-].map((service)=>(
-<div
-key={service}
-className="group rounded-3xl border border-white/10 bg-white/5 p-10 transition duration-700 hover:-translate-y-3 hover:border-[#D4A537]/50 hover:bg-white/10"
->
-
-<div className="mb-10 h-12 w-12 rounded-full bg-[#D4A537]/20"></div>
-
-<h3 className="text-2xl font-semibold">
-
-{service}
-
-</h3>
-
-<p className="mt-6 leading-8 text-white/60">
-
-Delivering premium engineering and construction
-solutions with precision and excellence.
-
-</p>
-
-<div className="mt-10 text-[#D4A537] transition group-hover:translate-x-2">
-
-Learn More →
-
-</div>
-
-</div>
-))}
-
-</div>
-
-</div>
-
-</section>
-
-
-{/* ================= WHY CHOOSE US ================= */}
+      {/* ================= WHY CHOOSE US ================= */}
 
 <section className="bg-[#0D0F12] py-32">
 
@@ -397,7 +283,7 @@ tracking-tight">
           className="flex items-start gap-6 border-b border-white/10 pb-8"
         >
 
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#D4A537]/15 text-[#D4A537]">
+          <div className="liquid-glass liquid-glass-gold flex h-12 w-12 items-center justify-center rounded-full text-[#D4A537]">
 
             ✓
 
