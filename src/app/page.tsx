@@ -85,10 +85,10 @@ const socials = [
   },
 ];
 
-const [mobileOpen, setMobileOpen] = useState(false);
+
 export default function Home() {
   const [active, setActive] = useState(0);
-
+  const [mobileOpen, setMobileOpen] = useState(false);
   useEffect(() => {
     const timer = setInterval(() => {
       setActive((prev) => (prev + 1) % slides.length);
