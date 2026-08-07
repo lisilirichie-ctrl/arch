@@ -1,17 +1,16 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 
-const WHATSAPP_NUMBER = "254795853879"; // no + or spaces, required by wa.me
+const WHATSAPP_NUMBER = "254795853879";
 const WHATSAPP_MESSAGE = "Hi Archstruc Group, I'm interested in your services.";
 
 const contactMethods = [
   {
     label: "WhatsApp",
     value: "+254 795 853 879",
-    href: `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(
-      WHATSAPP_MESSAGE
-    )}`,
+    href: `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(WHATSAPP_MESSAGE)}`,
     external: true,
     icon: (
       <svg viewBox="0 0 24 24" fill="currentColor" className="h-7 w-7">
@@ -26,11 +25,7 @@ const contactMethods = [
     external: false,
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="h-7 w-7">
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          d="M3 5.5C3 4.67 3.67 4 4.5 4H7.4c.66 0 1.24.44 1.42 1.08l1.06 3.75a1.5 1.5 0 0 1-.4 1.5l-1.66 1.6a12.3 12.3 0 0 0 5.75 5.75l1.6-1.66a1.5 1.5 0 0 1 1.5-.4l3.75 1.06c.64.18 1.08.76 1.08 1.42v2.9c0 .83-.67 1.5-1.5 1.5H19c-8.84 0-16-7.16-16-16v-.99Z"
-        />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M3 5.5C3 4.67 3.67 4 4.5 4H7.4c.66 0 1.24.44 1.42 1.08l1.06 3.75a1.5 1.5 0 0 1-.4 1.5l-1.66 1.6a12.3 12.3 0 0 0 5.75 5.75l1.6-1.66a1.5 1.5 0 0 1 1.5-.4l3.75 1.06c.64.18 1.08.76 1.08 1.42v2.9c0 .83-.67 1.5-1.5 1.5H19c-8.84 0-16-7.16-16-16v-.99Z" />
       </svg>
     ),
   },
@@ -62,26 +57,37 @@ const contactMethods = [
 
 export default function ContactPage() {
   return (
-    <main className="bg-[#0D0F12] text-white">
+    <main className="relative bg-[#0D0F12] text-white overflow-hidden">
+      {/* ================= BACKGROUND IMAGE + AURORA ================= */}
+      <div className="pointer-events-none absolute inset-0 z-0">
+        <Image
+          src="https://images.unsplash.com/photo-1778424446970-e7dad8209d9b?fm=jpg&q=80&w=2000&auto=format&fit=crop"
+          alt=""
+          fill
+          priority
+          className="object-cover opacity-30"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-[#0D0F12]/85 to-[#0D0F12]" />
+        <div className="aurora aurora-1" />
+        <div className="aurora aurora-2" />
+        <div className="aurora aurora-3" />
+      </div>
+
       {/* ================= HEADER ================= */}
-      <section className="relative pt-40 pb-24 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-black via-[#0D0F12] to-[#0D0F12]" />
-        <div className="relative z-10 mx-auto max-w-7xl px-6 lg:px-8 text-center">
-          <p className="uppercase tracking-[0.4em] text-[#D4A537] text-sm">
-            GET IN TOUCH
-          </p>
+      <section className="relative z-10 pt-40 pb-24">
+        <div className="mx-auto max-w-7xl px-6 lg:px-8 text-center">
+          <p className="uppercase tracking-[0.4em] text-[#D4A537] text-sm">GET IN TOUCH</p>
           <h1 className="mt-5 text-5xl md:text-6xl font-semibold tracking-tight">
             Let&apos;s Build Something Great.
           </h1>
           <p className="mt-6 max-w-2xl mx-auto text-lg leading-8 text-white/65">
-            Reach out for consultations, project quotes, or partnership
-            opportunities. Our team responds fast.
+            Reach out for consultations, project quotes, or partnership opportunities. Our team responds fast.
           </p>
         </div>
       </section>
 
       {/* ================= CONTACT ICONS ================= */}
-      <section className="pb-32">
+      <section className="relative z-10 pb-32">
         <div className="mx-auto max-w-6xl px-6 lg:px-8">
           <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
             {contactMethods.map((method, i) => (
@@ -109,21 +115,15 @@ export default function ContactPage() {
       </section>
 
       {/* ================= WHATSAPP CTA STRIP ================= */}
-      <section className="pb-32">
+      <section className="relative z-10 pb-32">
         <div className="mx-auto max-w-5xl px-6 lg:px-8">
           <div className="liquid-glass liquid-glass-gold flex flex-col items-center gap-6 rounded-3xl px-8 py-16 text-center sm:flex-row sm:justify-between sm:text-left">
             <div>
-              <h2 className="text-2xl md:text-3xl font-medium">
-                Prefer chatting on WhatsApp?
-              </h2>
-              <p className="mt-3 text-white/60">
-                Message us directly and get a response within minutes.
-              </p>
+              <h2 className="text-2xl md:text-3xl font-medium">Prefer chatting on WhatsApp?</h2>
+              <p className="mt-3 text-white/60">Message us directly and get a response within minutes.</p>
             </div>
             <Link
-              href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(
-                WHATSAPP_MESSAGE
-              )}`}
+              href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(WHATSAPP_MESSAGE)}`}
               target="_blank"
               rel="noopener noreferrer"
               className="liquid-glass liquid-glass-gold flex shrink-0 items-center gap-3 rounded-full px-8 py-4 font-medium text-[#D4A537] transition hover:scale-105"
@@ -137,31 +137,56 @@ export default function ContactPage() {
         </div>
       </section>
 
-      {/* wobble keyframes — move to globals.css if you prefer it centralized */}
       <style jsx global>{`
         @keyframes wobble {
-          0%,
-          100% {
-            transform: rotate(0deg) scale(1);
-          }
-          20% {
-            transform: rotate(-6deg) scale(1.03);
-          }
-          40% {
-            transform: rotate(5deg) scale(1.02);
-          }
-          60% {
-            transform: rotate(-3deg) scale(1.01);
-          }
-          80% {
-            transform: rotate(2deg) scale(1);
-          }
+          0%, 100% { transform: rotate(0deg) scale(1); }
+          20% { transform: rotate(-6deg) scale(1.03); }
+          40% { transform: rotate(5deg) scale(1.02); }
+          60% { transform: rotate(-3deg) scale(1.01); }
+          80% { transform: rotate(2deg) scale(1); }
         }
-        .wobble-icon {
-          animation: wobble 4.5s ease-in-out infinite;
+        .wobble-icon { animation: wobble 4.5s ease-in-out infinite; }
+        .group:hover .wobble-icon { animation-duration: 1.2s; }
+
+        .aurora {
+          position: absolute;
+          border-radius: 9999px;
+          filter: blur(110px);
+          opacity: 0.35;
+          mix-blend-mode: screen;
         }
-        .group:hover .wobble-icon {
-          animation-duration: 1.2s;
+        .aurora-1 {
+          top: -10%; left: -10%; width: 45vw; height: 45vw;
+          background: radial-gradient(circle, #d4a537 0%, transparent 70%);
+          animation: aurora-drift-1 18s ease-in-out infinite;
+        }
+        .aurora-2 {
+          top: 20%; right: -15%; width: 40vw; height: 40vw;
+          background: radial-gradient(circle, #8a6d1f 0%, transparent 70%);
+          animation: aurora-drift-2 22s ease-in-out infinite;
+        }
+        .aurora-3 {
+          bottom: -15%; left: 30%; width: 35vw; height: 35vw;
+          background: radial-gradient(circle, #f5d76e 0%, transparent 70%);
+          animation: aurora-drift-3 26s ease-in-out infinite;
+        }
+
+        @keyframes aurora-drift-1 {
+          0%, 100% { transform: translate(0, 0) scale(1); }
+          50% { transform: translate(6vw, 8vh) scale(1.15); }
+        }
+        @keyframes aurora-drift-2 {
+          0%, 100% { transform: translate(0, 0) scale(1); }
+          50% { transform: translate(-8vw, 6vh) scale(1.1); }
+        }
+        @keyframes aurora-drift-3 {
+          0%, 100% { transform: translate(0, 0) scale(1); }
+          50% { transform: translate(5vw, -6vh) scale(1.2); }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .aurora { animation: none !important; }
+          .wobble-icon { animation: none !important; }
         }
       `}</style>
     </main>
