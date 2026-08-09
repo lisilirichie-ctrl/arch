@@ -1,61 +1,199 @@
 "use client";
 
+import { useEffect, useState, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 
 const WHATSAPP_NUMBER = "254795853879";
 const WHATSAPP_MESSAGE = "Hi Archstruc Group, I'm interested in your services.";
 
-const contactMethods = [
-  {
-    label: "WhatsApp",
-    value: "+254 795 853 879",
-    href: `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(WHATSAPP_MESSAGE)}`,
-    external: true,
-    icon: (
-      <svg viewBox="0 0 24 24" fill="currentColor" className="h-7 w-7">
-        <path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2 22l5.29-1.39a9.9 9.9 0 0 0 4.75 1.21h.01c5.46 0 9.91-4.45 9.91-9.91C21.96 6.45 17.5 2 12.04 2Zm5.8 14.06c-.24.68-1.4 1.3-1.93 1.38-.49.08-1.11.12-1.79-.11-.41-.13-.94-.31-1.62-.6-2.85-1.23-4.71-4.1-4.85-4.29-.14-.19-1.16-1.54-1.16-2.94s.72-2.08.98-2.37c.26-.29.56-.36.75-.36h.53c.17 0 .4-.03.62.47.24.56.81 1.94.88 2.08.07.14.12.31.02.5-.1.19-.15.31-.29.48-.15.17-.31.38-.44.51-.15.15-.3.31-.13.6.17.29.75 1.24 1.61 2.01 1.11.99 2.04 1.3 2.33 1.44.29.14.46.12.63-.07.17-.19.72-.84.92-1.13.19-.29.39-.24.65-.14.27.1 1.68.79 1.97.93.29.14.48.21.55.33.07.12.07.68-.17 1.36Z" />
-      </svg>
-    ),
-  },
-  {
-    label: "Call Us",
-    value: "+254 795 853 879",
-    href: "tel:+254795853879",
-    external: false,
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="h-7 w-7">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M3 5.5C3 4.67 3.67 4 4.5 4H7.4c.66 0 1.24.44 1.42 1.08l1.06 3.75a1.5 1.5 0 0 1-.4 1.5l-1.66 1.6a12.3 12.3 0 0 0 5.75 5.75l1.6-1.66a1.5 1.5 0 0 1 1.5-.4l3.75 1.06c.64.18 1.08.76 1.08 1.42v2.9c0 .83-.67 1.5-1.5 1.5H19c-8.84 0-16-7.16-16-16v-.99Z" />
-      </svg>
-    ),
-  },
-  {
-    label: "Email",
-    value: "info@archstrucgroup.co.ke",
-    href: "mailto:info@archstrucgroup.co.ke",
-    external: false,
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="h-7 w-7">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M3 6.5h18v11a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 17.5v-11Z" />
-        <path strokeLinecap="round" strokeLinejoin="round" d="m3.5 7 8.5 6.5L20.5 7" />
-      </svg>
-    ),
-  },
-  {
-    label: "Visit Us",
-    value: "Nairobi, Kenya",
-    href: "https://maps.google.com/?q=Nairobi,Kenya",
-    external: true,
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="h-7 w-7">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21Z" />
-        <circle cx="12" cy="9.5" r="2.5" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
-    ),
-  },
+interface ContactMethod {
+  label: string;
+  href: string;
+  value: string;
+  icon: React.ReactNode;
+  external?: boolean;
+}
+
+const contactMethods: ContactMethod[] = [
+  // ...unchanged, keep your existing array here
 ];
 
-export default function ContactPage() {
+interface QuoteModalProps {
+  open: boolean;
+  onClose: () => void;
+}
+
+function QuoteModal({ open, onClose }: QuoteModalProps) {
+  const [form, setForm] = useState({
+    name: "",
+    phone: "",
+    service: "",
+    location: "",
+    budget: "",
+    details: "",
+  });
+
+  // lock body scroll while modal is open
+  useEffect(() => {
+    if (open) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [open]);
+
+  // close on Escape
+  useEffect(() => {
+    function handleKey(e: KeyboardEvent) {
+      if (e.key === "Escape") onClose();
+    }
+    if (open) window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [open, onClose]);
+
+  if (!open) return null;
+
+  function handleChange(
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) {
+    const { name, value } = e.target;
+    setForm((prev) => ({ ...prev, [name]: value }));
+  }
+
+  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+
+    const lines = [
+      "Hi Archstruc Group, I'd like a quote for my project.",
+      "",
+      `Name: ${form.name}`,
+      `Phone: ${form.phone}`,
+      form.service && `Service: ${form.service}`,
+      form.location && `Location: ${form.location}`,
+      form.budget && `Budget: ${form.budget}`,
+      form.details && `Details: ${form.details}`,
+    ].filter(Boolean);
+
+    const message = lines.join("\n");
+    const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+
+    window.open(url, "_blank", "noopener,noreferrer");
+    onClose();
+  }
+
+  return (
+    <div
+      className="fixed inset-0 z-[100] flex items-center justify-center px-4"
+      role="dialog"
+      aria-modal="true"
+    >
+      {/* backdrop */}
+      <div
+        className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+        onClick={onClose}
+      />
+
+      {/* panel */}
+      <div className="liquid-glass liquid-glass-gold relative z-10 w-full max-w-lg rounded-3xl p-8 sm:p-10">
+        <button
+          onClick={onClose}
+          aria-label="Close"
+          className="absolute right-5 top-5 flex h-9 w-9 items-center justify-center rounded-full text-white/70 transition hover:bg-white/10 hover:text-white"
+        >
+          ✕
+        </button>
+
+        <p className="uppercase tracking-[0.35em] text-[#D4A537] text-xs">
+          REQUEST A QUOTE
+        </p>
+        <h2 className="mt-3 text-2xl md:text-3xl font-semibold tracking-tight">
+          Tell Us About Your Project.
+        </h2>
+        <p className="mt-3 text-sm text-white/60">
+          We'll open WhatsApp with your details pre-filled so you can send it straight to our team.
+        </p>
+
+        <form onSubmit={handleSubmit} className="mt-8 space-y-4">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <input
+              required
+              name="name"
+              value={form.name}
+              onChange={handleChange}
+              placeholder="Full name"
+              className="rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-sm text-white placeholder-white/40 outline-none transition focus:border-[#D4A537]"
+            />
+            <input
+              required
+              name="phone"
+              value={form.phone}
+              onChange={handleChange}
+              placeholder="Phone number"
+              className="rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-sm text-white placeholder-white/40 outline-none transition focus:border-[#D4A537]"
+            />
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <input
+              name="service"
+              value={form.service}
+              onChange={handleChange}
+              placeholder="Service (e.g. Residential build)"
+              className="rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-sm text-white placeholder-white/40 outline-none transition focus:border-[#D4A537]"
+            />
+            <input
+              name="location"
+              value={form.location}
+              onChange={handleChange}
+              placeholder="Project location"
+              className="rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-sm text-white placeholder-white/40 outline-none transition focus:border-[#D4A537]"
+            />
+          </div>
+
+          <input
+            name="budget"
+            value={form.budget}
+            onChange={handleChange}
+            placeholder="Estimated budget (optional)"
+            className="w-full rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-sm text-white placeholder-white/40 outline-none transition focus:border-[#D4A537]"
+          />
+
+          <textarea
+            name="details"
+            value={form.details}
+            onChange={handleChange}
+            placeholder="Tell us a bit more about the project..."
+            rows={4}
+            className="w-full resize-none rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-sm text-white placeholder-white/40 outline-none transition focus:border-[#D4A537]"
+          />
+
+          <button
+            type="submit"
+            className="liquid-glass liquid-glass-gold mt-2 w-full rounded-full px-6 py-4 font-medium text-[#D4A537] transition hover:scale-[1.02]"
+          >
+            Send via WhatsApp
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+function ContactPageInner() {
+  const searchParams = useSearchParams();
+  const [quoteOpen, setQuoteOpen] = useState(false);
+
+  useEffect(() => {
+    if (searchParams.get("quote") === "true") {
+      setQuoteOpen(true);
+    }
+  }, [searchParams]);
+
   return (
     <main className="relative bg-[#0D0F12] text-white overflow-hidden">
       {/* ================= BACKGROUND IMAGE + AURORA ================= */}
@@ -83,6 +221,13 @@ export default function ContactPage() {
           <p className="mt-6 max-w-2xl mx-auto text-lg leading-8 text-white/65">
             Reach out for consultations, project quotes, or partnership opportunities. Our team responds fast.
           </p>
+
+          <button
+            onClick={() => setQuoteOpen(true)}
+            className="liquid-glass liquid-glass-gold mt-10 rounded-full px-8 py-4 font-medium text-[#D4A537] transition hover:scale-105"
+          >
+            Request A Quote
+          </button>
         </div>
       </section>
 
@@ -137,6 +282,8 @@ export default function ContactPage() {
         </div>
       </section>
 
+      <QuoteModal open={quoteOpen} onClose={() => setQuoteOpen(false)} />
+
       <style jsx global>{`
         @keyframes wobble {
           0%, 100% { transform: rotate(0deg) scale(1); }
@@ -190,5 +337,13 @@ export default function ContactPage() {
         }
       `}</style>
     </main>
+  );
+}
+
+export default function ContactPage() {
+  return (
+    <Suspense fallback={null}>
+      <ContactPageInner />
+    </Suspense>
   );
 }

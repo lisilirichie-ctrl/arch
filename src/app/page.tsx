@@ -136,7 +136,7 @@ export default function Home() {
             aria-label={social.label}
             className="flex h-11 w-11 items-center justify-center rounded-full transition hover:scale-110"
             style={{ background: social.color }}
-          >
+          > 
             {social.icon}
           </Link>
         ))}
@@ -164,9 +164,12 @@ export default function Home() {
       ))}
     </div>
 
-    <button className="liquid-glass liquid-glass-gold hidden rounded-full px-6 py-3 font-medium text-[#D4A537] transition hover:scale-105 lg:block">
-      Get A Quote
-    </button>
+  <Link
+  href="/contact?quote=true"
+  className="liquid-glass liquid-glass-gold hidden rounded-full px-6 py-3 font-medium text-[#D4A537] transition hover:scale-105 lg:block"
+>
+  Get A Quote
+</Link>
 
     {/* Mobile hamburger */}
     <button
@@ -213,9 +216,14 @@ export default function Home() {
           {item}
         </Link>
       ))}
-      <button className="liquid-glass liquid-glass-gold mt-3 rounded-full px-6 py-3 font-medium text-[#D4A537]">
-        Get A Quote
-      </button>
+     <Link
+  href="/contact?quote=true"
+  onClick={() => setMobileOpen(false)}
+  className="liquid-glass liquid-glass-gold mt-3 rounded-full px-6 py-3 font-medium text-[#D4A537]"
+>
+  Get A Quote
+</Link>
+
     </div>
   </div>
 </nav>
