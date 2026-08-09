@@ -143,10 +143,9 @@ export default function Home() {
       </div>
 
     {/* ================= NAVBAR ================= */}
-
 {/* Mobile menu panel */}
 {mobileOpen && (
-  <div className="fixed inset-0 z-[9999] bg-black/95 backdrop-blur-xl lg:hidden">
+  <div className="fixed inset-0 z-40 bg-black/95 backdrop-blur-xl lg:hidden">
     <div className="flex h-full flex-col px-9 pt-28">
 
       {/* Mobile navigation */}
@@ -167,7 +166,7 @@ export default function Home() {
 
       {/* Get a Quote */}
       <Link
-        href="/contact"
+        href="/contact?quote=true"
         onClick={() => setMobileOpen(false)}
         className="mt-10 inline-flex w-fit rounded-full border border-[#D4A537]/40 bg-[#D4A537]/10 px-8 py-3 text-lg text-[#D4A537] backdrop-blur-md transition hover:bg-[#D4A537]/20"
       >
