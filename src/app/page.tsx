@@ -198,10 +198,38 @@ export default function Home() {
 
 {/* Mobile menu panel — SIBLING of <nav>, not nested inside it */}
 {mobileOpen && (
-  <div className="fixed inset-0 z-40 bg-black/95 backdrop-blur-xl lg:hidden">
-    {/* ...unchanged from before */}
+  <div className="fixed inset-0 z-40 bg-black/80 backdrop-blur-md lg:hidden">
+    <div className="flex h-full flex-col px-9 pt-32">
+
+      {/* Mobile navigation */}
+      <nav className="flex flex-col gap-7">
+        {["Home", "About", "Services", "Projects", "Careers", "Contact"].map(
+          (item) => (
+            <Link
+              key={item}
+              href={item === "Home" ? "/" : `/${item.toLowerCase()}`}
+              onClick={() => setMobileOpen(false)}
+              className="text-2xl font-light text-white/90 transition-colors hover:text-[#D4A537]"
+            >
+              {item}
+            </Link>
+          )
+        )}
+      </nav>
+
+      {/* Get A Quote */}
+      <Link
+        href="/contact"
+        onClick={() => setMobileOpen(false)}
+        className="mt-10 w-fit rounded-full border border-[#D4A537]/40 bg-[#D4A537]/10 px-8 py-3 text-lg text-[#D4A537] transition hover:bg-[#D4A537]/20"
+      >
+        Get A Quote
+      </Link>
+
+    </div>
   </div>
 )}
+
       {/* ================= HERO ================= */}
 
       <section className="relative flex min-h-screen items-center pt-24">
