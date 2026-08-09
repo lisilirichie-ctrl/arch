@@ -144,89 +144,39 @@ export default function Home() {
 
     {/* ================= NAVBAR ================= */}
 
-<nav className="liquid-glass fixed top-0 left-0 z-50 w-full !rounded-none border-x-0 border-t-0">
-  <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-6 lg:px-8">
+{/* Mobile menu panel */}
+{mobileOpen && (
+  <div className="fixed inset-0 z-[9999] bg-black/95 backdrop-blur-xl lg:hidden">
+    <div className="flex h-full flex-col px-9 pt-28">
 
-    <Link href="/" className="flex items-center gap-2" onClick={() => setMobileOpen(false)}>
-      <h1 className="text-2xl font-semibold tracking-tight">ARCHSTRUC</h1>
-      <span className="text-xs uppercase tracking-[0.35em] text-[#D4A537]">Group</span>
-    </Link>
-
-    <div className="hidden items-center gap-10 lg:flex">
-      {["Home", "About", "Services", "Projects", "Careers", "Contact"].map((item) => (
-        <Link
-          key={item}
-          href={item === "Home" ? "/" : `/${item.toLowerCase()}`}
-          className="relative text-sm text-white/80 transition hover:text-white after:absolute after:left-0 after:-bottom-1 after:h-px after:w-0 after:bg-[#D4A537] after:transition-all hover:after:w-full"
-        >
-          {item}
-        </Link>
-      ))}
-    </div>
-
-  <Link
-  href="/contact?quote=true"
-  className="liquid-glass liquid-glass-gold hidden rounded-full px-6 py-3 font-medium text-[#D4A537] transition hover:scale-105 lg:block"
->
-  Get A Quote
-</Link>
-
-    {/* Mobile hamburger */}
-    <button
-      onClick={() => setMobileOpen((prev) => !prev)}
-      aria-label="Toggle menu"
-      aria-expanded={mobileOpen}
-      className="liquid-glass flex h-11 w-11 items-center justify-center rounded-full lg:hidden"
-    >
-      <div className="flex h-4 w-5 flex-col justify-between">
-        <span
-          className={`h-px w-full bg-white transition-all duration-300 ${
-            mobileOpen ? "translate-y-[7px] rotate-45" : ""
-          }`}
-        />
-        <span
-          className={`h-px w-full bg-white transition-all duration-300 ${
-            mobileOpen ? "opacity-0" : ""
-          }`}
-        />
-        <span
-          className={`h-px w-full bg-white transition-all duration-300 ${
-            mobileOpen ? "-translate-y-[7px] -rotate-45" : ""
-          }`}
-        />
+      {/* Mobile navigation */}
+      <div className="flex flex-col gap-7">
+        {["Home", "About", "Services", "Projects", "Careers", "Contact"].map(
+          (item) => (
+            <Link
+              key={item}
+              href={item === "Home" ? "/" : `/${item.toLowerCase()}`}
+              onClick={() => setMobileOpen(false)}
+              className="text-2xl font-light text-white/90 transition-colors hover:text-[#D4A537]"
+            >
+              {item}
+            </Link>
+          )
+        )}
       </div>
-    </button>
 
-  </div>
-
-  {/* Mobile menu panel */}
-  <div
-    className={`overflow-hidden transition-all duration-300 lg:hidden ${
-      mobileOpen ? "max-h-96 border-t border-white/10" : "max-h-0"
-    }`}
-  >
-    <div className="flex flex-col gap-1 px-6 py-6">
-      {["Home", "About", "Services", "Projects", "Careers", "Contact"].map((item) => (
-        <Link
-          key={item}
-          href={item === "Home" ? "/" : `/${item.toLowerCase()}`}
-          onClick={() => setMobileOpen(false)}
-          className="rounded-lg px-3 py-3 text-white/80 transition hover:bg-white/5 hover:text-white"
-        >
-          {item}
-        </Link>
-      ))}
-     <Link
-  href="/contact?quote=true"
-  onClick={() => setMobileOpen(false)}
-  className="liquid-glass liquid-glass-gold mt-3 rounded-full px-6 py-3 font-medium text-[#D4A537]"
->
-  Get A Quote
-</Link>
+      {/* Get a Quote */}
+      <Link
+        href="/contact"
+        onClick={() => setMobileOpen(false)}
+        className="mt-10 inline-flex w-fit rounded-full border border-[#D4A537]/40 bg-[#D4A537]/10 px-8 py-3 text-lg text-[#D4A537] backdrop-blur-md transition hover:bg-[#D4A537]/20"
+      >
+        Get A Quote
+      </Link>
 
     </div>
   </div>
-</nav>
+)}
       {/* ================= HERO ================= */}
 
       <section className="relative flex min-h-screen items-center pt-24">
