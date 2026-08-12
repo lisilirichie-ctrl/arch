@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 
 const slides = [
@@ -29,10 +29,103 @@ const slides = [
 
 const SLIDE_DURATION = 7000;
 
+const projects = [
+  {
+    slug: "residential-maisonette-croton-ridge",
+    title: "Residential Maisonette",
+    location: "Croton Ridge, Kiambu",
+    category: "Residential",
+    image:
+      "https://mtmyqbymrcgjnjyjyfgp.supabase.co/storage/v1/object/public/project-images/cover_05adb54d-535b-4d8c-8f39-9d5a519cdcbd.png",
+  },
+  {
+    slug: "interior-westlands",
+    title: "Interior Design",
+    location: "Westlands, Nairobi County",
+    category: "Interior",
+    image:
+      "https://mtmyqbymrcgjnjyjyfgp.supabase.co/storage/v1/object/public/project-images/cover_10d2e7a5-653b-4291-9337-db7d5a46fdcb.png",
+  },
+  {
+    slug: "dg-residence",
+    title: "DG Residence",
+    location: "Kikuyu, Kiambu County",
+    category: "Residential",
+    image:
+      "https://mtmyqbymrcgjnjyjyfgp.supabase.co/storage/v1/object/public/project-images/cover_3483c563-adde-4bb6-b8af-3f055af0f1a1.jpg",
+  },
+  {
+    slug: "tm-apartments",
+    title: "TM Apartments",
+    location: "Kikuyu, Kiambu County",
+    category: "Residential",
+    image:
+      "https://mtmyqbymrcgjnjyjyfgp.supabase.co/storage/v1/object/public/project-images/cover_429ebd5a-7acb-4123-9f6e-c100b5cebb71.jpg",
+  },
+  {
+    slug: "cn-residence",
+    title: "CN Residence",
+    location: "Chuka, Tharaka Nithi County",
+    category: "Residential",
+    image:
+      "https://mtmyqbymrcgjnjyjyfgp.supabase.co/storage/v1/object/public/project-images/cover_50053a99-a552-452a-8bf9-f2ca7b509488.jpg",
+  },
+  {
+    slug: "dw-residence",
+    title: "DW Residence",
+    location: "Machakos, Machakos County",
+    category: "Residential",
+    image:
+      "https://mtmyqbymrcgjnjyjyfgp.supabase.co/storage/v1/object/public/project-images/cover_6f86a9ff-bdca-4310-abe5-a953d9312ab4.jpg",
+  },
+  {
+    slug: "interior-juba-1",
+    title: "Interior Design",
+    location: "Juba, South Sudan",
+    category: "Interior",
+    image:
+      "https://mtmyqbymrcgjnjyjyfgp.supabase.co/storage/v1/object/public/project-images/cover_78e94d1f-02a5-481c-b2b8-2b8e4b8c2be9.png",
+  },
+  {
+    slug: "residential-maisonette-tatu-city",
+    title: "Residential Maisonette",
+    location: "Tatu City, Kiambu County",
+    category: "Residential",
+    image:
+      "https://mtmyqbymrcgjnjyjyfgp.supabase.co/storage/v1/object/public/project-images/cover_7911cc4d-7d7d-4298-9636-7ebeab12c071.jpg",
+  },
+  {
+    slug: "interior-tatu-city",
+    title: "Interior Design",
+    location: "Tatu City, Kiambu County",
+    category: "Interior",
+    image:
+      "https://mtmyqbymrcgjnjyjyfgp.supabase.co/storage/v1/object/public/project-images/cover_892828c7-a1d3-4fbd-afff-b92bc46e007c.png",
+  },
+  {
+    slug: "twiga-greens",
+    title: "Twiga Greens",
+    location: "Tatu City, Kiambu County",
+    category: "Residential",
+    description:
+      "20 residential blocks, each rising 12 floors, offering a blend of 2 and 3-bedroom units designed for modern urban living.",
+    image:
+      "https://mtmyqbymrcgjnjyjyfgp.supabase.co/storage/v1/object/public/project-images/cover_8fcedcf2-4cbd-4251-bb87-34dcc851c54f.jpg",
+  },
+  {
+    slug: "kn-residence",
+    title: "KN Residence",
+    location: "Utawala, Nairobi County",
+    category: "Residential",
+    image:
+      "https://mtmyqbymrcgjnjyjyfgp.supabase.co/storage/v1/object/public/project-images/cover_9a63a5d4-1bf6-47ff-896d-e01057987833.jpg",
+  },
+];
+
 const socials = [
   {
     label: "TikTok",
-    href: "https://www.tiktok.com/@archstrucgroup",
+    href: "https://www.tiktok.com/@archstruc_group_ltd",
     color: "#000000",
     icon: (
       <svg viewBox="0 0 24 24" className="h-5 w-5" fill="#ffffff">
@@ -42,7 +135,7 @@ const socials = [
   },
   {
     label: "Instagram",
-    href: "https://www.instagram.com/archstrucgroup",
+    href: "https://www.instagram.com/archstruc_group/",
     color:
       "radial-gradient(circle at 30% 110%, #fdf497 0%, #fdf497 5%, #fd5949 45%, #d6249f 60%, #285AEB 90%)",
     icon: (
@@ -52,12 +145,12 @@ const socials = [
     ),
   },
   {
-    label: "X",
-    href: "https://x.com/archstrucgroup",
-    color: "#000000",
+    label: "Facebook",
+    href: "https://www.facebook.com/61575856977760/",
+    color: "#1877F2",
     icon: (
       <svg viewBox="0 0 24 24" className="h-5 w-5" fill="#ffffff">
-        <path d="M13.6 10.6 20.9 2h-1.73l-6.34 7.46L7.77 2H2l7.66 11.15L2 22h1.74l6.7-7.87L15.98 22h5.77l-8.15-11.4Zm-2.37 2.79-.78-1.1L4.3 3.3h2.67l4.98 7.13.78 1.1 6.47 9.26h-2.67l-5.3-7.9Z" />
+        <path d="M22 12.06C22 6.5 17.52 2 12 2S2 6.5 2 12.06c0 5.02 3.66 9.18 8.44 9.94v-7.03H7.9v-2.91h2.54V9.85c0-2.51 1.49-3.9 3.77-3.9 1.09 0 2.23.2 2.23.2v2.46h-1.26c-1.24 0-1.63.77-1.63 1.56v1.89h2.78l-.44 2.91h-2.34V22c4.78-.76 8.44-4.92 8.44-9.94Z" />
       </svg>
     ),
   },
@@ -85,10 +178,12 @@ const socials = [
   },
 ];
 
-
 export default function Home() {
   const [active, setActive] = useState(0);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [projectIndex, setProjectIndex] = useState(0);
+  const projectScrollerRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     const timer = setInterval(() => {
       setActive((prev) => (prev + 1) % slides.length);
@@ -97,9 +192,21 @@ export default function Home() {
     return () => clearInterval(timer);
   }, []);
 
+  const handleProjectScroll = () => {
+    const el = projectScrollerRef.current;
+    if (!el) return;
+    const index = Math.round(el.scrollLeft / el.clientWidth);
+    setProjectIndex(index);
+  };
+
+  const goToProject = (index: number) => {
+    const el = projectScrollerRef.current;
+    if (!el) return;
+    el.scrollTo({ left: index * el.clientWidth, behavior: "smooth" });
+  };
+
   return (
     <main className="relative min-h-screen text-white">
-
       {/* ================= FIXED SLIDESHOW BACKGROUND (covers entire page, stays while scrolling) ================= */}
 
       <div className="fixed inset-0 -z-10">
@@ -113,9 +220,7 @@ export default function Home() {
             <img
               src={slide.image}
               alt=""
-              className={`h-full w-full object-cover transition-transform duration-[7000ms] ${
-                active === index ? "scale-110" : "scale-100"
-              }`}
+              className="h-full w-full object-cover"
             />
           </div>
         ))}
@@ -136,109 +241,123 @@ export default function Home() {
             aria-label={social.label}
             className="flex h-11 w-11 items-center justify-center rounded-full transition hover:scale-110"
             style={{ background: social.color }}
-          > 
+          >
             {social.icon}
           </Link>
         ))}
       </div>
 
-    {/* ================= NAVBAR ================= */}
-<nav className="liquid-glass fixed top-0 left-0 z-50 w-full !rounded-none border-x-0 border-t-0">
-  <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-6 lg:px-8">
+      {/* ================= NAVBAR ================= */}
+      <nav className="liquid-glass fixed top-0 left-0 z-50 w-full !rounded-none border-x-0 border-t-0">
+        <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-6 lg:px-8">
+          <Link
+            href="/"
+            className="flex items-center gap-3"
+            onClick={() => setMobileOpen(false)}
+          >
+            <img
+              src="/archstruc-icon.png"
+              alt="Archstruc Group"
+              className="h-10 w-10 shrink-0"
+            />
+            <span className="flex flex-col leading-none">
+              <span className="text-2xl font-semibold tracking-tight">
+                ARCHSTRUC
+              </span>
+              <span className="text-xs uppercase tracking-[0.35em] text-[#358CB8]">
+                Group
+              </span>
+            </span>
+          </Link>
 
-    <Link href="/" className="flex items-center gap-2" onClick={() => setMobileOpen(false)}>
-      <h1 className="text-2xl font-semibold tracking-tight">ARCHSTRUC</h1>
-      <span className="text-xs uppercase tracking-[0.35em] text-[#D4A537]">Group</span>
-    </Link>
+          <div className="hidden items-center gap-10 lg:flex">
+            {["Home", "About", "Services", "Projects", "Contact"].map(
+              (item) => (
+                <Link
+                  key={item}
+                  href={item === "Home" ? "/" : `/${item.toLowerCase()}`}
+                  className="relative text-sm text-white/80 transition hover:text-white after:absolute after:left-0 after:-bottom-1 after:h-px after:w-0 after:bg-[#358CB8] after:transition-all hover:after:w-full"
+                >
+                  {item}
+                </Link>
+              )
+            )}
+          </div>
 
-    <div className="hidden items-center gap-10 lg:flex">
-      {["Home", "About", "Services", "Projects", "Careers", "Contact"].map((item) => (
-        <Link
-          key={item}
-          href={item === "Home" ? "/" : `/${item.toLowerCase()}`}
-          className="relative text-sm text-white/80 transition hover:text-white after:absolute after:left-0 after:-bottom-1 after:h-px after:w-0 after:bg-[#D4A537] after:transition-all hover:after:w-full"
-        >
-          {item}
-        </Link>
-      ))}
-    </div>
+          <Link
+            href="/contact"
+            className="liquid-glass liquid-glass-gold hidden rounded-full px-6 py-3 font-medium text-[#358CB8] transition hover:scale-105 lg:block"
+          >
+            Get A Quote
+          </Link>
 
-    <button className="liquid-glass liquid-glass-gold hidden rounded-full px-6 py-3 font-medium text-[#D4A537] transition hover:scale-105 lg:block">
-      {/* your Get A Quote Link from earlier goes here */}
-    </button>
-
-    {/* Mobile hamburger */}
-    <button
-      onClick={() => setMobileOpen((prev) => !prev)}
-      aria-label="Toggle menu"
-      aria-expanded={mobileOpen}
-      className="liquid-glass flex h-11 w-11 items-center justify-center rounded-full lg:hidden"
-    >
-      <div className="flex h-4 w-5 flex-col justify-between">
-        <span
-          className={`h-px w-full bg-white transition-all duration-300 ${
-            mobileOpen ? "translate-y-[7px] rotate-45" : ""
-          }`}
-        />
-        <span
-          className={`h-px w-full bg-white transition-all duration-300 ${
-            mobileOpen ? "opacity-0" : ""
-          }`}
-        />
-        <span
-          className={`h-px w-full bg-white transition-all duration-300 ${
-            mobileOpen ? "-translate-y-[7px] -rotate-45" : ""
-          }`}
-        />
-      </div>
-    </button>
-
-  </div>
-</nav>
-
-{/* Mobile menu panel — SIBLING of <nav>, not nested inside it */}
-{mobileOpen && (
-  <div className="fixed inset-0 z-40 bg-black/80 backdrop-blur-md lg:hidden">
-    <div className="flex h-full flex-col px-9 pt-32">
-
-      {/* Mobile navigation */}
-      <nav className="flex flex-col gap-7">
-        {["Home", "About", "Services", "Projects", "Careers", "Contact"].map(
-          (item) => (
-            <Link
-              key={item}
-              href={item === "Home" ? "/" : `/${item.toLowerCase()}`}
-              onClick={() => setMobileOpen(false)}
-              className="text-2xl font-light text-white/90 transition-colors hover:text-[#D4A537]"
-            >
-              {item}
-            </Link>
-          )
-        )}
+          {/* Mobile hamburger */}
+          <button
+            onClick={() => setMobileOpen((prev) => !prev)}
+            aria-label="Toggle menu"
+            aria-expanded={mobileOpen}
+            className="liquid-glass flex h-11 w-11 items-center justify-center rounded-full lg:hidden"
+          >
+            <div className="flex h-4 w-5 flex-col justify-between">
+              <span
+                className={`h-px w-full bg-white transition-all duration-300 ${
+                  mobileOpen ? "translate-y-[7px] rotate-45" : ""
+                }`}
+              />
+              <span
+                className={`h-px w-full bg-white transition-all duration-300 ${
+                  mobileOpen ? "opacity-0" : ""
+                }`}
+              />
+              <span
+                className={`h-px w-full bg-white transition-all duration-300 ${
+                  mobileOpen ? "-translate-y-[7px] -rotate-45" : ""
+                }`}
+              />
+            </div>
+          </button>
+        </div>
       </nav>
 
-      {/* Get A Quote */}
-      <Link
-        href="/contact"
-        onClick={() => setMobileOpen(false)}
-        className="mt-10 w-fit rounded-full border border-[#D4A537]/40 bg-[#D4A537]/10 px-8 py-3 text-lg text-[#D4A537] transition hover:bg-[#D4A537]/20"
-      >
-        Get A Quote
-      </Link>
+      {/* Mobile menu panel — SIBLING of <nav>, not nested inside it */}
+      {mobileOpen && (
+        <div className="fixed inset-0 z-40 bg-black/80 backdrop-blur-md lg:hidden">
+          <div className="flex h-full flex-col px-9 pt-32">
+            {/* Mobile navigation */}
+            <nav className="flex flex-col gap-7">
+              {["Home", "About", "Services", "Projects", "Contact"].map(
+                (item) => (
+                  <Link
+                    key={item}
+                    href={item === "Home" ? "/" : `/${item.toLowerCase()}`}
+                    onClick={() => setMobileOpen(false)}
+                    className="text-2xl font-light text-white/90 transition-colors hover:text-[#358CB8]"
+                  >
+                    {item}
+                  </Link>
+                )
+              )}
+            </nav>
 
-    </div>
-  </div>
-)}
+            {/* Get A Quote */}
+            <Link
+              href="/contact"
+              onClick={() => setMobileOpen(false)}
+              className="mt-10 w-fit rounded-full border border-[#358CB8]/40 bg-[#358CB8]/10 px-8 py-3 text-lg text-[#358CB8] transition hover:bg-[#358CB8]/20"
+            >
+              Get A Quote
+            </Link>
+          </div>
+        </div>
+      )}
 
       {/* ================= HERO ================= */}
 
       <section className="relative flex min-h-screen items-center pt-24">
-
         {/* Content only — no img tags here, background is the fixed layer above */}
         <div className="relative z-20 mx-auto w-full max-w-7xl px-6 lg:px-8">
           <div className="max-w-3xl">
-
-            <p className="mb-6 uppercase tracking-[0.4em] text-[#D4A537]">
+            <p className="mb-6 uppercase tracking-[0.4em] text-[#358CB8]">
               ENGINEERING EXCELLENCE
             </p>
 
@@ -253,7 +372,7 @@ export default function Home() {
             <div className="mt-12 flex flex-wrap gap-5">
               <Link
                 href="/projects"
-                className="liquid-glass liquid-glass-gold rounded-xl px-8 py-4 font-medium text-[#D4A537] transition hover:scale-[1.02]"
+                className="liquid-glass liquid-glass-gold rounded-xl px-8 py-4 font-medium text-[#358CB8] transition hover:scale-[1.02]"
               >
                 Explore Projects
               </Link>
@@ -264,106 +383,114 @@ export default function Home() {
                 Contact Us
               </Link>
             </div>
-
           </div>
         </div>
 
         {/* Slide counter */}
         <div className="absolute bottom-10 left-6 z-20 text-sm tracking-[0.3em] text-white/60 lg:left-8">
           0{active + 1}
-          <span className="mx-2 text-[#D4A537]">/</span>
+          <span className="mx-2 text-[#358CB8]">/</span>
           0{slides.length}
         </div>
 
         {/* Scroll indicator */}
         <div className="absolute bottom-10 right-8 z-20 hidden lg:flex flex-col items-center">
-          <span className="rotate-90 text-xs uppercase tracking-[0.4em] text-white/50">Scroll</span>
-          <div className="mt-8 h-16 w-px bg-gradient-to-b from-[#D4A537] to-transparent"></div>
-        </div>
-
-      </section>
-
-      {/* ================= WHY CHOOSE US (glass panel, slides visible behind) ================= */}
-
-      <section className="liquid-glass !rounded-none border-x-0 py-32">
-        <div className="mx-auto grid max-w-7xl gap-20 px-6 lg:grid-cols-2 lg:px-8">
-
-          <div>
-            <p className="uppercase tracking-[0.35em] text-[#D4A537] text-sm">WHY ARCHSTRUC</p>
-            <h2 className="mt-5 text-3xl md:text-4xl lg:text-5xl leading-tight font-medium tracking-tight">
-              Built With Precision.
-              <br />
-              Delivered With Integrity.
-            </h2>
-            <p className="mt-10 text-lg leading-9 text-white/65">
-              Every project reflects our commitment to engineering excellence, innovation and long-term value.
-            </p>
-          </div>
-
-          <div className="space-y-10">
-            {[
-              "Experienced Engineering Team",
-              "Modern Construction Technology",
-              "Strict Quality Control",
-              "Timely Project Delivery",
-            ].map((item) => (
-              <div key={item} className="flex items-start gap-6 border-b border-white/10 pb-8">
-                <div className="liquid-glass liquid-glass-gold flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-[#D4A537]">
-                  ✓
-                </div>
-                <div>
-                  <h3 className="text-2xl font-medium">{item}</h3>
-                  <p className="mt-3 text-white/60">Professional execution with uncompromising standards.</p>
-                </div>
-              </div>
-            ))}
-          </div>
-
+          <span className="rotate-90 text-xs uppercase tracking-[0.4em] text-white/50">
+            Scroll
+          </span>
+          <div className="mt-8 h-16 w-px bg-gradient-to-b from-[#358CB8] to-transparent"></div>
         </div>
       </section>
 
-      {/* ================= PROCESS (glass panel, slides visible behind) ================= */}
+      {/* ================= PROJECTS (full-screen horizontal slides) ================= */}
 
-      <section className="py-32">
-        <div className="mx-auto max-w-7xl px-6 lg:px-8">
-
-          <p className="uppercase tracking-[0.35em] text-[#D4A537] text-sm">OUR PROCESS</p>
-          <h2 className="mt-4 text-5xl font-medium">From Vision To Reality</h2>
-
-          <div className="mt-24 grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-            {["Consultation", "Planning", "Construction", "Completion"].map((step, index) => (
-              <div key={step} className="liquid-glass rounded-2xl p-8">
-                <div className="mb-6 text-5xl font-bold text-white/10">0{index + 1}</div>
-                <h3 className="text-2xl font-semibold">{step}</h3>
-                <p className="mt-4 leading-8 text-white/60">Every stage is managed with precision and attention to detail.</p>
-              </div>
-            ))}
-          </div>
-
-        </div>
-      </section>
-
-      {/* ================= STATS (glass cards, slides visible behind) ================= */}
-
-      <section className="py-28">
-        <div className="mx-auto grid max-w-6xl grid-cols-2 gap-6 px-6 lg:grid-cols-4">
-          {[
-            ["120+", "Projects"],
-            ["15+", "Years"],
-            ["98%", "Client Satisfaction"],
-            ["50+", "Experts"],
-          ].map(([number, label]) => (
+      <section className="relative h-screen w-full overflow-hidden">
+        <div
+          ref={projectScrollerRef}
+          onScroll={handleProjectScroll}
+          className="flex h-full w-full snap-x snap-mandatory overflow-x-scroll [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        >
+          {projects.map((project, index) => (
             <div
-              key={label}
-              className="liquid-glass flex flex-col items-center gap-3 rounded-2xl px-4 py-10 text-center"
+              key={project.slug}
+              className="relative flex h-full w-screen shrink-0 snap-start items-end"
             >
-              <h2 className="text-3xl md:text-4xl font-medium text-[#D4A537]">{number}</h2>
-              <p className="uppercase tracking-[0.3em] text-white/50 text-xs">{label}</p>
+              <img
+                src={project.image}
+                alt={project.title}
+                className="absolute inset-0 h-full w-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-black/40" />
+
+              <div className="relative z-10 mx-auto w-full max-w-7xl px-6 pb-28 lg:px-8">
+                <p className="uppercase tracking-[0.4em] text-[#358CB8] text-sm">
+                  {project.category} · {project.location}
+                </p>
+                <h3 className="mt-5 max-w-3xl text-4xl md:text-6xl font-medium leading-[1.02] tracking-tight">
+                  {project.title}
+                </h3>
+                {project.description && (
+                  <p className="mt-6 max-w-xl text-white/70 leading-7">
+                    {project.description}
+                  </p>
+                )}
+                <Link
+                  href={`/projects/${project.slug}`}
+                  className="liquid-glass mt-8 inline-block rounded-full px-7 py-3 text-sm transition hover:scale-[1.02]"
+                >
+                  View Project
+                </Link>
+              </div>
             </div>
           ))}
         </div>
-      </section>
 
+        {/* eyebrow + index counter */}
+        <p className="pointer-events-none absolute top-10 left-1/2 z-10 -translate-x-1/2 text-xs uppercase tracking-[0.35em] text-white/50">
+          Featured Projects
+        </p>
+        <div className="pointer-events-none absolute bottom-28 right-6 z-10 text-sm tracking-[0.3em] text-white/60 lg:right-8">
+          {String(projectIndex + 1).padStart(2, "0")}
+          <span className="mx-2 text-[#358CB8]">/</span>
+          {String(projects.length).padStart(2, "0")}
+        </div>
+
+        {/* left / right arrows */}
+        <button
+          onClick={() => goToProject(Math.max(projectIndex - 1, 0))}
+          aria-label="Previous project"
+          className="liquid-glass absolute left-4 top-1/2 z-20 hidden h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full transition hover:scale-105 lg:flex"
+        >
+          <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M15 18l-6-6 6-6" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </button>
+        <button
+          onClick={() => goToProject(Math.min(projectIndex + 1, projects.length - 1))}
+          aria-label="Next project"
+          className="liquid-glass liquid-glass-gold absolute right-4 top-1/2 z-20 hidden h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full text-[#358CB8] transition hover:scale-105 lg:flex"
+        >
+          <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M9 18l6-6-6-6" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </button>
+
+        {/* dot progress, bottom center */}
+        <div className="pointer-events-none absolute bottom-10 left-1/2 z-20 flex -translate-x-1/2 items-center gap-3">
+          {projects.map((project, index) => (
+            <button
+              key={project.slug}
+              onClick={() => goToProject(index)}
+              aria-label={`Go to ${project.title}`}
+              className={`pointer-events-auto h-2 rounded-full transition-all ${
+                projectIndex === index
+                  ? "w-6 bg-[#358CB8]"
+                  : "w-2 bg-white/30 hover:bg-white/60"
+              }`}
+            />
+          ))}
+        </div>
+      </section>
     </main>
   );
 }

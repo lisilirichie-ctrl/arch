@@ -7,6 +7,7 @@ import Image from "next/image";
 
 const WHATSAPP_NUMBER = "254795853879";
 const WHATSAPP_MESSAGE = "Hi Archstruc Group, I'm interested in your services.";
+const EMAIL = "archstrucgroup@gmail.com";
 
 interface ContactMethod {
   label: string;
@@ -17,7 +18,75 @@ interface ContactMethod {
 }
 
 const contactMethods: ContactMethod[] = [
-  // ...unchanged, keep your existing array here
+  {
+    label: "Email",
+    href: `mailto:${EMAIL}`,
+    value: EMAIL,
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-7 w-7">
+        <rect x="3" y="5" width="18" height="14" rx="2" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M3 7l9 6 9-6" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    ),
+  },
+  {
+    label: "Call Us",
+    href: "tel:+254795853879",
+    value: "+254 795 853 879",
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-7 w-7">
+        <path
+          d="M22 16.92v3a2 2 0 0 1-2.18 2 19.8 19.8 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92Z"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    ),
+  },
+  {
+    label: "WhatsApp",
+    href: `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(WHATSAPP_MESSAGE)}`,
+    value: "Chat with us",
+    external: true,
+    icon: (
+      <svg viewBox="0 0 24 24" fill="currentColor" className="h-7 w-7">
+        <path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2 22l5.29-1.39a9.9 9.9 0 0 0 4.75 1.21h.01c5.46 0 9.91-4.45 9.91-9.91C21.96 6.45 17.5 2 12.04 2Zm5.8 14.06c-.24.68-1.4 1.3-1.93 1.38-.49.08-1.11.12-1.79-.11-.41-.13-.94-.31-1.62-.6-2.85-1.23-4.71-4.1-4.85-4.29-.14-.19-1.16-1.54-1.16-2.94s.72-2.08.98-2.37c.26-.29.56-.36.75-.36h.53c.17 0 .4-.03.62.47.24.56.81 1.94.88 2.08.07.14.12.31.02.5-.1.19-.15.31-.29.48-.15.17-.31.38-.44.51-.15.15-.3.31-.13.6.17.29.75 1.24 1.61 2.01 1.11.99 2.04 1.3 2.33 1.44.29.14.46.12.63-.07.17-.19.72-.84.92-1.13.19-.29.39-.24.65-.14.27.1 1.68.79 1.97.93.29.14.48.21.55.33.07.12.07.68-.17 1.36Z" />
+      </svg>
+    ),
+  },
+  {
+    label: "Instagram",
+    href: "https://www.instagram.com/archstruc_group/",
+    value: "@archstruc_group",
+    external: true,
+    icon: (
+      <svg viewBox="0 0 24 24" fill="currentColor" className="h-7 w-7">
+        <path d="M12 2c2.72 0 3.06.01 4.12.06 1.06.05 1.79.22 2.43.47.66.26 1.22.6 1.77 1.15.55.55.9 1.11 1.16 1.77.24.64.41 1.37.46 2.43.05 1.06.06 1.4.06 4.12s-.01 3.06-.06 4.12c-.05 1.06-.22 1.79-.46 2.43a4.9 4.9 0 0 1-1.16 1.77 4.9 4.9 0 0 1-1.77 1.16c-.64.24-1.37.41-2.43.46-1.06.05-1.4.06-4.12.06s-3.06-.01-4.12-.06c-1.06-.05-1.79-.22-2.43-.46a4.9 4.9 0 0 1-1.77-1.16 4.9 4.9 0 0 1-1.16-1.77c-.24-.64-.41-1.37-.46-2.43C2.01 15.06 2 14.72 2 12s.01-3.06.06-4.12c.05-1.06.22-1.79.47-2.43.26-.66.6-1.22 1.15-1.77A4.9 4.9 0 0 1 5.45 2.53c.64-.25 1.37-.42 2.43-.47C8.94 2.01 9.28 2 12 2Zm0 1.8c-2.67 0-2.99.01-4.04.06-.97.04-1.5.2-1.85.34-.46.18-.8.39-1.15.74-.35.35-.56.69-.74 1.15-.14.35-.3.88-.34 1.85-.05 1.05-.06 1.37-.06 4.04s.01 2.99.06 4.04c.04.97.2 1.5.34 1.85.18.46.39.8.74 1.15.35.35.69.56 1.15.74.35.14.88.3 1.85.34 1.05.05 1.37.06 4.04.06s2.99-.01 4.04-.06c.97-.04 1.5-.2 1.85-.34.46-.18.8-.39 1.15-.74.35-.35.56-.69.74-1.15.14-.35.3-.88.34-1.85.05-1.05.06-1.37.06-4.04s-.01-2.99-.06-4.04c-.04-.97-.2-1.5-.34-1.85a3.1 3.1 0 0 0-.74-1.15 3.1 3.1 0 0 0-1.15-.74c-.35-.14-.88-.3-1.85-.34-1.05-.05-1.37-.06-4.04-.06Zm0 3.5a4.7 4.7 0 1 1 0 9.4 4.7 4.7 0 0 1 0-9.4Zm0 1.8a2.9 2.9 0 1 0 0 5.8 2.9 2.9 0 0 0 0-5.8Zm4.88-2a1.1 1.1 0 1 1 0 2.2 1.1 1.1 0 0 1 0-2.2Z" />
+      </svg>
+    ),
+  },
+  {
+    label: "Facebook",
+    href: "https://www.facebook.com/61575856977760/",
+    value: "Archstruc Group",
+    external: true,
+    icon: (
+      <svg viewBox="0 0 24 24" fill="currentColor" className="h-7 w-7">
+        <path d="M22 12.06C22 6.5 17.52 2 12 2S2 6.5 2 12.06c0 5.02 3.66 9.18 8.44 9.94v-7.03H7.9v-2.91h2.54V9.85c0-2.51 1.49-3.9 3.77-3.9 1.09 0 2.23.2 2.23.2v2.46h-1.26c-1.24 0-1.63.77-1.63 1.56v1.89h2.78l-.44 2.91h-2.34V22c4.78-.76 8.44-4.92 8.44-9.94Z" />
+      </svg>
+    ),
+  },
+  {
+    label: "TikTok",
+    href: "https://www.tiktok.com/@archstruc_group_ltd",
+    value: "@archstruc_group_ltd",
+    external: true,
+    icon: (
+      <svg viewBox="0 0 24 24" fill="currentColor" className="h-7 w-7">
+        <path d="M16.6 5.82c-.88-.96-1.36-2.22-1.36-3.52h-3.07v13.6c0 1.53-1.24 2.77-2.77 2.77a2.77 2.77 0 0 1-2.77-2.77 2.77 2.77 0 0 1 2.77-2.77c.26 0 .5.03.74.1v-3.14a5.86 5.86 0 0 0-.74-.05 5.85 5.85 0 0 0-5.85 5.86A5.85 5.85 0 0 0 9.4 21.8a5.85 5.85 0 0 0 5.85-5.86V9.01a8.9 8.9 0 0 0 5.18 1.66V7.6a5.6 5.6 0 0 1-3.83-1.78Z" />
+      </svg>
+    ),
+  },
 ];
 
 interface QuoteModalProps {
@@ -108,7 +177,7 @@ function QuoteModal({ open, onClose }: QuoteModalProps) {
           ✕
         </button>
 
-        <p className="uppercase tracking-[0.35em] text-[#D4A537] text-xs">
+        <p className="uppercase tracking-[0.35em] text-[#358CB8] text-xs">
           REQUEST A QUOTE
         </p>
         <h2 className="mt-3 text-2xl md:text-3xl font-semibold tracking-tight">
@@ -126,7 +195,7 @@ function QuoteModal({ open, onClose }: QuoteModalProps) {
               value={form.name}
               onChange={handleChange}
               placeholder="Full name"
-              className="rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-sm text-white placeholder-white/40 outline-none transition focus:border-[#D4A537]"
+              className="rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-sm text-white placeholder-white/40 outline-none transition focus:border-[#358CB8]"
             />
             <input
               required
@@ -134,7 +203,7 @@ function QuoteModal({ open, onClose }: QuoteModalProps) {
               value={form.phone}
               onChange={handleChange}
               placeholder="Phone number"
-              className="rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-sm text-white placeholder-white/40 outline-none transition focus:border-[#D4A537]"
+              className="rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-sm text-white placeholder-white/40 outline-none transition focus:border-[#358CB8]"
             />
           </div>
 
@@ -144,14 +213,14 @@ function QuoteModal({ open, onClose }: QuoteModalProps) {
               value={form.service}
               onChange={handleChange}
               placeholder="Service (e.g. Residential build)"
-              className="rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-sm text-white placeholder-white/40 outline-none transition focus:border-[#D4A537]"
+              className="rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-sm text-white placeholder-white/40 outline-none transition focus:border-[#358CB8]"
             />
             <input
               name="location"
               value={form.location}
               onChange={handleChange}
               placeholder="Project location"
-              className="rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-sm text-white placeholder-white/40 outline-none transition focus:border-[#D4A537]"
+              className="rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-sm text-white placeholder-white/40 outline-none transition focus:border-[#358CB8]"
             />
           </div>
 
@@ -160,7 +229,7 @@ function QuoteModal({ open, onClose }: QuoteModalProps) {
             value={form.budget}
             onChange={handleChange}
             placeholder="Estimated budget (optional)"
-            className="w-full rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-sm text-white placeholder-white/40 outline-none transition focus:border-[#D4A537]"
+            className="w-full rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-sm text-white placeholder-white/40 outline-none transition focus:border-[#358CB8]"
           />
 
           <textarea
@@ -169,12 +238,12 @@ function QuoteModal({ open, onClose }: QuoteModalProps) {
             onChange={handleChange}
             placeholder="Tell us a bit more about the project..."
             rows={4}
-            className="w-full resize-none rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-sm text-white placeholder-white/40 outline-none transition focus:border-[#D4A537]"
+            className="w-full resize-none rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-sm text-white placeholder-white/40 outline-none transition focus:border-[#358CB8]"
           />
 
           <button
             type="submit"
-            className="liquid-glass liquid-glass-gold mt-2 w-full rounded-full px-6 py-4 font-medium text-[#D4A537] transition hover:scale-[1.02]"
+            className="liquid-glass liquid-glass-gold mt-2 w-full rounded-full px-6 py-4 font-medium text-[#358CB8] transition hover:scale-[1.02]"
           >
             Send via WhatsApp
           </button>
@@ -214,7 +283,7 @@ function ContactPageInner() {
       {/* ================= HEADER ================= */}
       <section className="relative z-10 pt-40 pb-24">
         <div className="mx-auto max-w-7xl px-6 lg:px-8 text-center">
-          <p className="uppercase tracking-[0.4em] text-[#D4A537] text-sm">GET IN TOUCH</p>
+          <p className="uppercase tracking-[0.4em] text-[#358CB8] text-sm">GET IN TOUCH</p>
           <h1 className="mt-5 text-5xl md:text-6xl font-semibold tracking-tight">
             Let&apos;s Build Something Great.
           </h1>
@@ -224,7 +293,7 @@ function ContactPageInner() {
 
           <button
             onClick={() => setQuoteOpen(true)}
-            className="liquid-glass liquid-glass-gold mt-10 rounded-full px-8 py-4 font-medium text-[#D4A537] transition hover:scale-105"
+            className="liquid-glass liquid-glass-gold mt-10 rounded-full px-8 py-4 font-medium text-[#358CB8] transition hover:scale-105"
           >
             Request A Quote
           </button>
@@ -244,7 +313,7 @@ function ContactPageInner() {
                 className="liquid-glass liquid-glass-gold group flex flex-col items-center gap-5 rounded-3xl px-6 py-10 text-center transition-transform duration-300 hover:scale-[1.04]"
               >
                 <div
-                  className="wobble-icon flex h-16 w-16 items-center justify-center rounded-full bg-[#D4A537]/10 text-[#D4A537]"
+                  className="wobble-icon flex h-16 w-16 items-center justify-center rounded-full bg-[#358CB8]/10 text-[#358CB8]"
                   style={{ animationDelay: `${i * 0.35}s` }}
                 >
                   {method.icon}
@@ -271,7 +340,7 @@ function ContactPageInner() {
               href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(WHATSAPP_MESSAGE)}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="liquid-glass liquid-glass-gold flex shrink-0 items-center gap-3 rounded-full px-8 py-4 font-medium text-[#D4A537] transition hover:scale-105"
+              className="liquid-glass liquid-glass-gold flex shrink-0 items-center gap-3 rounded-full px-8 py-4 font-medium text-[#358CB8] transition hover:scale-105"
             >
               <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5">
                 <path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2 22l5.29-1.39a9.9 9.9 0 0 0 4.75 1.21h.01c5.46 0 9.91-4.45 9.91-9.91C21.96 6.45 17.5 2 12.04 2Zm5.8 14.06c-.24.68-1.4 1.3-1.93 1.38-.49.08-1.11.12-1.79-.11-.41-.13-.94-.31-1.62-.6-2.85-1.23-4.71-4.1-4.85-4.29-.14-.19-1.16-1.54-1.16-2.94s.72-2.08.98-2.37c.26-.29.56-.36.75-.36h.53c.17 0 .4-.03.62.47.24.56.81 1.94.88 2.08.07.14.12.31.02.5-.1.19-.15.31-.29.48-.15.17-.31.38-.44.51-.15.15-.3.31-.13.6.17.29.75 1.24 1.61 2.01 1.11.99 2.04 1.3 2.33 1.44.29.14.46.12.63-.07.17-.19.72-.84.92-1.13.19-.29.39-.24.65-.14.27.1 1.68.79 1.97.93.29.14.48.21.55.33.07.12.07.68-.17 1.36Z" />
@@ -304,17 +373,17 @@ function ContactPageInner() {
         }
         .aurora-1 {
           top: -10%; left: -10%; width: 45vw; height: 45vw;
-          background: radial-gradient(circle, #d4a537 0%, transparent 70%);
+          background: radial-gradient(circle, #358CB8 0%, transparent 70%);
           animation: aurora-drift-1 18s ease-in-out infinite;
         }
         .aurora-2 {
           top: 20%; right: -15%; width: 40vw; height: 40vw;
-          background: radial-gradient(circle, #8a6d1f 0%, transparent 70%);
+          background: radial-gradient(circle, #144B60 0%, transparent 70%);
           animation: aurora-drift-2 22s ease-in-out infinite;
         }
         .aurora-3 {
           bottom: -15%; left: 30%; width: 35vw; height: 35vw;
-          background: radial-gradient(circle, #f5d76e 0%, transparent 70%);
+          background: radial-gradient(circle, #9CCDDA 0%, transparent 70%);
           animation: aurora-drift-3 26s ease-in-out infinite;
         }
 
