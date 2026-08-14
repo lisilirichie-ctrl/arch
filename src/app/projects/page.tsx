@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { createClient } from "@supabase/supabase-js";
+import { createClient } from "@supabase/supabase-js"
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -20,12 +20,9 @@ type Project = {
   description: string | null;
 };
 
-const categories = ["All", "Residential", "Commercial", "Infrastructure"];
-
 export default function Projects() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
-  const [active, setActive] = useState("All");
 
   useEffect(() => {
     async function fetchProjects() {
@@ -42,14 +39,6 @@ export default function Projects() {
     fetchProjects();
   }, []);
 
-  const filtered =
-    active === "All"
-      ? projects
-      : projects.filter(
-          (project) =>
-            project.category.toLowerCase() === active.toLowerCase()
-        );
-
   return (
     <main className="relative min-h-screen text-white">
 
@@ -61,7 +50,7 @@ export default function Projects() {
           className="h-full w-full object-cover"
         />
         <div className="absolute inset-0 bg-black/60"></div>
-        <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/60 to-[#0D0F12]"></div>
+        <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-[#144B60]/60 to-[#0D0F12]"></div>
       </div>
 
       {/* ================= HERO ================= */}
@@ -70,7 +59,7 @@ export default function Projects() {
 
         <div className="mx-auto w-full max-w-7xl px-6 lg:px-8">
 
-          <p className="mb-6 uppercase tracking-[0.4em] text-[#D4A537]">
+          <p className="mb-6 uppercase tracking-[0.4em] text-[#358CB8]">
             OUR PROJECTS
           </p>
 
@@ -89,32 +78,6 @@ export default function Projects() {
 
       </section>
 
-      {/* ================= FILTERS ================= */}
-
-      <section className="relative pb-4">
-
-        <div className="mx-auto max-w-7xl px-6 lg:px-8">
-
-          <div className="flex flex-wrap gap-3">
-            {categories.map((category) => (
-              <button
-                key={category}
-                onClick={() => setActive(category)}
-                className={`liquid-glass rounded-full px-6 py-3 text-sm font-medium transition ${
-                  active === category
-                    ? "liquid-glass-gold text-[#D4A537]"
-                    : "text-white/70 hover:text-white"
-                }`}
-              >
-                {category}
-              </button>
-            ))}
-          </div>
-
-        </div>
-
-      </section>
-
       {/* ================= PROJECTS GRID ================= */}
 
       <section className="relative py-16">
@@ -123,58 +86,71 @@ export default function Projects() {
 
           {loading && (
             <div className="flex justify-center py-24">
-              <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#D4A537] border-t-transparent" />
+              <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#358CB8] border-t-transparent" />
             </div>
           )}
 
-          {!loading && (
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {filtered.map((project) => (
-                <Link
-                  key={project.id}
-                  href={`/projects/${project.slug}`}
-                  className="liquid-glass group relative flex flex-col overflow-hidden rounded-2xl transition-transform duration-300 hover:-translate-y-1"
-                >
-                  <div className="relative h-64 overflow-hidden">
+          {!loading && projects.length > 0 && (
+            <>
+              {/* Mobile: single column, name always visible */}
+              <div className="flex flex-col gap-3 md:hidden">
+                {projects.map((project) => (
+                  <Link
+                    key={project.id}
+                    href={`/projects/${project.slug}`}
+                    className="group relative block aspect-[16/11] w-full overflow-hidden rounded-xl"
+                  >
                     <img
                       src={project.cover_image}
                       alt={project.title}
-                      className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
+                      className="h-full w-full object-cover transition-transform duration-700 ease-out group-active:scale-105"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent"></div>
-
-                    <span className="absolute left-4 top-4 rounded-full bg-black/50 px-4 py-1.5 text-xs uppercase tracking-[0.2em] text-[#D4A537]">
-                      {project.category}
-                    </span>
-                  </div>
-
-                  <div className="flex flex-1 flex-col justify-between p-6">
-                    <div>
-                      <h3 className="text-xl font-medium text-white transition-colors duration-300 group-hover:text-[#D4A537]">
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/10 to-transparent" />
+                    <div className="absolute inset-x-0 bottom-0 p-5">
+                      <h3 className="font-serif text-2xl font-normal tracking-tight text-white">
                         {project.title}
                       </h3>
-                      <p className="mt-2 text-sm text-white/50">
+                      <p className="mt-1 text-xs uppercase tracking-[0.25em] text-[#9CCDDA]">
                         {project.location}
                       </p>
-                      {project.description && (
-                        <p className="mt-3 line-clamp-2 text-sm leading-6 text-white/60">
-                          {project.description}
-                        </p>
-                      )}
                     </div>
+                  </Link>
+                ))}
+              </div>
 
-                    <span className="mt-6 inline-flex items-center gap-2 text-sm text-[#D4A537] transition group-hover:gap-4">
-                      View Project →
-                    </span>
-                  </div>
-                </Link>
-              ))}
-            </div>
+              {/* Desktop: dense grid, name revealed on hover */}
+              <div className="hidden md:grid md:grid-cols-3 md:gap-2">
+                {projects.map((project) => (
+                  <Link
+                    key={project.id}
+                    href={`/projects/${project.slug}`}
+                    className="group relative block aspect-[4/3] overflow-hidden"
+                  >
+                    <img
+                      src={project.cover_image}
+                      alt={project.title}
+                      className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                    />
+
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/0 opacity-0 backdrop-blur-0 transition-all duration-500 ease-out group-hover:bg-black/50 group-hover:opacity-100 group-hover:backdrop-blur-[2px]">
+                      <div className="translate-y-3 text-center transition-transform duration-500 ease-out group-hover:translate-y-0">
+                        <h3 className="font-serif text-2xl font-normal tracking-tight text-white md:text-3xl">
+                          {project.title}
+                        </h3>
+                        <p className="mt-2 text-xs uppercase tracking-[0.25em] text-[#9CCDDA]">
+                          {project.location}
+                        </p>
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </>
           )}
 
-          {!loading && filtered.length === 0 && (
+          {!loading && projects.length === 0 && (
             <p className="py-20 text-center text-white/50">
-              No projects in this category yet.
+              No projects yet.
             </p>
           )}
 
@@ -198,7 +174,7 @@ export default function Projects() {
 
           <Link
             href="/contact"
-            className="rounded-full bg-[#D4A537] px-8 py-4 font-medium text-black transition hover:bg-[#c99722]"
+            className="rounded-full bg-[#358CB8] px-8 py-4 font-medium text-white transition hover:bg-[#144B60]"
           >
             Get A Quote
           </Link>

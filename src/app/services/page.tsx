@@ -1,56 +1,16 @@
 import Link from "next/link";
 
 const services = [
-  {
-    title: "Architectural Design",
-    description:
-      "Concept to construction-ready drawings, balancing form, function and buildability.",
-  },
-  {
-    title: "Interior Design",
-    description:
-      "Interiors that carry the same precision and character as the buildings that hold them.",
-  },
-  {
-    title: "Masterplanning",
-    description:
-      "Land-use and site strategy that sets up every phase of a development for success.",
-  },
-  {
-    title: "Acoustic Design",
-    description:
-      "Sound-conscious design for spaces where comfort and performance both matter.",
-  },
-  {
-    title: "BIM Consultancy (ISO 19650)",
-    description:
-      "Coordinated, standards-compliant BIM workflows across the full project lifecycle.",
-  },
-  {
-    title: "Graphic Design & Wayfinding",
-    description:
-      "Signage and environmental graphics that make large developments legible and premium.",
-  },
-  {
-    title: "Technical Due Diligence & Feasibility Studies",
-    description:
-      "Independent technical assessment before capital is committed to a site.",
-  },
-  {
-    title: "Environmental Design (LEED & EDGE)",
-    description:
-      "Sustainable design strategies aligned to internationally recognised certifications.",
-  },
-  {
-    title: "Façade Design",
-    description:
-      "The building's first impression, engineered for climate, cost and character.",
-  },
-  {
-    title: "Project Management",
-    description:
-      "End-to-end delivery oversight that keeps scope, budget and timeline aligned.",
-  },
+  "Architectural Design",
+  "Interior Design",
+  "Masterplanning",
+  "Acoustic Design",
+  "BIM Consultancy (ISO 19650)",
+  "Graphic Design & Wayfinding",
+  "Technical Due Diligence & Feasibility Studies",
+  "Environmental Design (LEED & EDGE)",
+  "Façade Design",
+  "Project Management",
 ];
 
 export default function Services() {
@@ -70,7 +30,7 @@ export default function Services() {
           className="h-full w-full object-cover"
         />
         <div className="absolute inset-0 bg-black/60"></div>
-        <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/60 to-[#0D0F12]"></div>
+        <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-[#144B60]/60 to-[#0D0F12]"></div>
       </div>
 
       {/* ================= HERO ================= */}
@@ -79,7 +39,7 @@ export default function Services() {
 
         <div className="mx-auto w-full max-w-7xl px-6 lg:px-8">
 
-          <p className="mb-6 uppercase tracking-[0.4em] text-[#D4A537]">
+          <p className="mb-6 uppercase tracking-[0.4em] text-[#358CB8]">
             OUR SERVICES
           </p>
 
@@ -102,19 +62,19 @@ export default function Services() {
 
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
 
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {services.map((service) => (
+          <div className="divide-y divide-white/10 border-t border-white/10">
+            {services.map((service, index) => (
               <div
-                key={service.title}
-                className="liquid-glass group flex flex-col rounded-2xl p-8 transition-transform duration-300 hover:-translate-y-1"
+                key={service}
+                className="group flex items-center justify-between py-10 transition-colors duration-300 md:py-12"
               >
-                <h3 className="text-xl font-medium text-white transition-colors duration-300 group-hover:text-[#D4A537]">
-                  {service.title}
-                </h3>
+                <span className="text-3xl font-medium tracking-tight text-white transition-colors duration-300 group-hover:text-[#9CCDDA] md:text-4xl">
+                  {service}
+                </span>
 
-                <p className="mt-4 text-sm leading-7 text-white/60">
-                  {service.description}
-                </p>
+                <span className="hidden text-sm text-white/40 transition-colors duration-300 group-hover:text-[#358CB8] md:block">
+                  {String(index + 1).padStart(2, "0")}
+                </span>
               </div>
             ))}
           </div>
@@ -128,7 +88,7 @@ export default function Services() {
 
             <Link
               href="/contact"
-              className="rounded-full bg-[#D4A537] px-8 py-4 font-medium text-black transition hover:bg-[#c99722]"
+              className="rounded-full bg-[#358CB8] px-8 py-4 font-medium text-white transition hover:bg-[#144B60]"
             >
               Get A Quote
             </Link>

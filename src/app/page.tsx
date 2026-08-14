@@ -249,22 +249,22 @@ export default function Home() {
 
       {/* ================= NAVBAR ================= */}
       <nav className="liquid-glass fixed top-0 left-0 z-50 w-full !rounded-none border-x-0 border-t-0">
-        <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-6 lg:px-8">
+        <div className="mx-auto flex h-24 max-w-7xl items-center justify-between px-6 lg:px-8">
           <Link
             href="/"
-            className="flex items-center gap-3"
+            className="flex items-center gap-4"
             onClick={() => setMobileOpen(false)}
           >
             <img
               src="/archstruc-icon.png"
               alt="Archstruc Group"
-              className="h-10 w-10 shrink-0"
+              className="h-16 w-16 shrink-0"
             />
             <span className="flex flex-col leading-none">
-              <span className="text-2xl font-semibold tracking-tight">
+              <span className="text-3xl font-semibold tracking-tight">
                 ARCHSTRUC
               </span>
-              <span className="text-xs uppercase tracking-[0.35em] text-[#358CB8]">
+              <span className="text-sm uppercase tracking-[0.35em] text-[#358CB8]">
                 Group
               </span>
             </span>
@@ -296,7 +296,7 @@ export default function Home() {
             onClick={() => setMobileOpen((prev) => !prev)}
             aria-label="Toggle menu"
             aria-expanded={mobileOpen}
-            className="liquid-glass flex h-11 w-11 items-center justify-center rounded-full lg:hidden"
+            className="liquid-glass flex h-11 w-11 items-center justify-center rounded-full transition hover:scale-105 lg:hidden"
           >
             <div className="flex h-4 w-5 flex-col justify-between">
               <span
@@ -321,7 +321,7 @@ export default function Home() {
 
       {/* Mobile menu panel — SIBLING of <nav>, not nested inside it */}
       {mobileOpen && (
-        <div className="fixed inset-0 z-40 bg-black/80 backdrop-blur-md lg:hidden">
+        <div className="fixed inset-0 z-40 bg-black/80 backdrop-blur-md  lg">
           <div className="flex h-full flex-col px-9 pt-32">
             {/* Mobile navigation */}
             <nav className="flex flex-col gap-7">
@@ -459,7 +459,7 @@ export default function Home() {
         <button
           onClick={() => goToProject(Math.max(projectIndex - 1, 0))}
           aria-label="Previous project"
-          className="liquid-glass absolute left-4 top-1/2 z-20 hidden h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full transition hover:scale-105 lg:flex"
+          className="liquid-glass absolute left-6 top-1/2 z-20 hidden h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full transition hover:scale-105 md:flex"
         >
           <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M15 18l-6-6 6-6" strokeLinecap="round" strokeLinejoin="round" />
@@ -468,27 +468,48 @@ export default function Home() {
         <button
           onClick={() => goToProject(Math.min(projectIndex + 1, projects.length - 1))}
           aria-label="Next project"
-          className="liquid-glass liquid-glass-gold absolute right-4 top-1/2 z-20 hidden h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full text-[#358CB8] transition hover:scale-105 lg:flex"
+          className="liquid-glass liquid-glass-gold absolute right-6 top-1/2 z-20 hidden h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full text-[#358CB8] transition hover:scale-105 md:flex"
         >
           <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M9 18l6-6-6-6" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </button>
 
-        {/* dot progress, bottom center */}
-        <div className="pointer-events-none absolute bottom-10 left-1/2 z-20 flex -translate-x-1/2 items-center gap-3">
-          {projects.map((project, index) => (
-            <button
-              key={project.slug}
-              onClick={() => goToProject(index)}
-              aria-label={`Go to ${project.title}`}
-              className={`pointer-events-auto h-2 rounded-full transition-all ${
-                projectIndex === index
-                  ? "w-6 bg-[#358CB8]"
-                  : "w-2 bg-white/30 hover:bg-white/60"
-              }`}
-            />
-          ))}
+        {/* dot progress, bottom center, with mobile prev/next buttons */}
+        <div className="pointer-events-none absolute bottom-10 left-1/2 z-20 flex -translate-x-1/2 items-center gap-4">
+          <button
+            onClick={() => goToProject(Math.max(projectIndex - 1, 0))}
+            aria-label="Previous project"
+           className="liquid-glass pointer-events-auto flex h-9 w-9 items-center justify-center rounded-full transition hover:scale-105">
+            <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M15 18l-6-6 6-6" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
+
+          <div className="flex items-center gap-3">
+            {projects.map((project, index) => (
+              <button
+                key={project.slug}
+                onClick={() => goToProject(index)}
+                aria-label={`Go to ${project.title}`}
+                className={`pointer-events-auto h-2 rounded-full transition-all ${
+                  projectIndex === index
+                    ? "w-6 bg-[#358CB8]"
+                    : "w-2 bg-white/30 hover:bg-white/60"
+                }`}
+              />
+            ))}
+          </div>
+
+          <button
+            onClick={() => goToProject(Math.min(projectIndex + 1, projects.length - 1))}
+            aria-label="Next project"
+            className="liquid-glass liquid-glass-gold pointer-events-auto flex h-9 w-9 items-center justify-center rounded-full text-[#358CB8] transition hover:scale-105"
+          >
+            <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M9 18l6-6-6-6" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
         </div>
       </section>
     </main>
