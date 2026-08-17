@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
-import { createClient } from "@supabase/supabase-js"
+import { createClient } from "@supabase/supabase-js";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -20,9 +20,89 @@ type Project = {
   description: string | null;
 };
 
+/* ---------- Block reveal — card slides up from behind a clipping container ---------- */
+function Reveal({
+  children,
+  delay = 0,
+}: {
+  children: React.ReactNode;
+  delay?: number;
+}) {
+  const ref = React.useRef<HTMLDivElement>(null);
+  const [visible, setVisible] = React.useState(false);
+
+  React.useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setVisible(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.05 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    /* Outer clip — hides the card while it's below the fold */
+    <div ref={ref} className="overflow-hidden">
+      <div
+        style={{
+          transitionDelay: `${delay}ms`,
+          transitionDuration: "800ms",
+          transitionTimingFunction: "cubic-bezier(0.16, 1, 0.3, 1)",
+        }}
+        className={`transition-transform ${
+          visible ? "translate-y-0" : "translate-y-full"
+        }`}
+      >
+        {children}
+      </div>
+    </div>
+  );
+}
+
+/* ---------- Simple fade reveal for text ---------- */
+function FadeReveal({
+  children,
+  delay = 0,
+}: {
+  children: React.ReactNode;
+  delay?: number;
+}) {
+  const ref = React.useRef<HTMLDivElement>(null);
+  const [visible, setVisible] = React.useState(false);
+
+  React.useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) { setVisible(true); observer.disconnect(); } },
+      { threshold: 0.1 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <div
+      ref={ref}
+      style={{ transitionDelay: `${delay}ms` }}
+      className={`transition-all duration-700 ease-out ${visible ? "translate-y-0 opacity-100" : "translate-y-5 opacity-0"}`}
+    >
+      {children}
+    </div>
+  );
+}
+
 export default function Projects() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeCategory, setActiveCategory] = useState("All");
 
   useEffect(() => {
     async function fetchProjects() {
@@ -39,150 +119,147 @@ export default function Projects() {
     fetchProjects();
   }, []);
 
-  return (
-    <main className="relative min-h-screen text-white">
+  const categories = useMemo(
+    () => ["All", ...Array.from(new Set(projects.map((p) => p.category)))],
+    [projects]
+  );
 
-      {/* FULL-PAGE BACKGROUND */}
-      <div className="fixed inset-0 -z-10">
-        <img
-          src="https://archstrucgroup.co.ke/archstruc_admin/uploads/683193499f5d6_17q copy (1).jpg"
-          alt="Archstruc Group project"
-          className="h-full w-full object-cover"
-        />
-        <div className="absolute inset-0 bg-black/60"></div>
-        <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-[#144B60]/60 to-[#0D0F12]"></div>
+  const filtered =
+    activeCategory === "All"
+      ? projects
+      : projects.filter((p) => p.category === activeCategory);
+
+  return (
+    <main className="relative min-h-screen bg-[#0B0D10] text-white">
+      <style>{`
+        @keyframes fadeUp {
+          from { opacity: 0; transform: translateY(20px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-up {
+          animation: fadeUp 0.7s ease-out both;
+        }
+      `}</style>
+
+      {/* Subtle ambient glow */}
+      <div className="pointer-events-none absolute left-1/2 top-0 h-[500px] w-[900px] -translate-x-1/2 rounded-full bg-[#358CB8]/8 blur-[120px]" />
+
+      {/* ── HEADER ─────────────────────────────────────────────────────────── */}
+      <header className="relative z-10 mx-auto max-w-[1600px] px-6 pb-10 pt-20 lg:px-10">
+        <div className="flex items-end justify-between">
+          <h1
+            className="text-3xl font-light tracking-tight text-white animate-fade-up md:text-4xl"
+            style={{ animationDelay: "80ms" }}
+          >
+            Our Projects
+          </h1>
+          <span
+            className="text-sm tabular-nums text-white/30 animate-fade-up"
+            style={{ animationDelay: "160ms" }}
+          >
+            {String(filtered.length).padStart(2, "0")}
+          </span>
+        </div>
+      </header>
+
+      {/* ── FILTER BAR ─────────────────────────────────────────────────────── */}
+      <div className="relative z-10 sticky top-0 border-b border-white/8 bg-[#0B0D10]/90 backdrop-blur-md">
+        <div className="mx-auto flex max-w-[1600px] items-center gap-1 overflow-x-auto px-6 lg:px-10">
+          {categories.map((cat) => (
+            <button
+              key={cat}
+              onClick={() => setActiveCategory(cat)}
+              className={`relative whitespace-nowrap px-4 py-3.5 text-[10px] uppercase tracking-[0.3em] transition-colors duration-300 ${
+                activeCategory === cat
+                  ? "text-white"
+                  : "text-white/30 hover:text-white/60"
+              }`}
+            >
+              {cat}
+              <span
+                className={`absolute inset-x-4 bottom-0 h-px bg-[#358CB8] transition-transform duration-400 ease-out origin-left ${
+                  activeCategory === cat ? "scale-x-100" : "scale-x-0"
+                }`}
+              />
+            </button>
+          ))}
+        </div>
       </div>
 
-      {/* ================= HERO ================= */}
+      {/* ── GRID ───────────────────────────────────────────────────────────── */}
+      <section className="relative z-10 py-10">
+        {loading && (
+          <div className="flex justify-center py-32">
+            <div className="h-7 w-7 animate-spin rounded-full border-2 border-[#358CB8] border-t-transparent" />
+          </div>
+        )}
 
-      <section className="relative flex min-h-[55vh] items-end pb-16 pt-32">
+        {!loading && filtered.length > 0 && (
+          <div className="mx-auto grid max-w-[1600px] grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 px-6 lg:px-10 gap-3">
+            {filtered.map((project, i) => (
+              <Reveal key={project.id} delay={(i % 3) * 120}>
+                <Link
+                  href={`/projects/${project.slug}`}
+                  className="group relative block overflow-hidden rounded-sm bg-[#111418]"
+                >
+                  {/* Image */}
+                  <div className="aspect-[4/3] overflow-hidden">
+                    <img
+                      src={project.cover_image}
+                      alt={project.title}
+                      className="h-full w-full object-cover transition-transform duration-[1600ms] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.06]"
+                    />
+                  </div>
 
-        <div className="mx-auto w-full max-w-7xl px-6 lg:px-8">
+                  {/* Permanent bottom gradient so title is always readable */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent" />
 
-          <p className="mb-6 uppercase tracking-[0.4em] text-[#358CB8]">
-            OUR PROJECTS
+                  {/* Title — hidden until hover, slides up from bottom */}
+                  <div className="absolute inset-x-0 bottom-0 overflow-hidden px-5 pb-5 pointer-events-none">
+                    <p className="text-sm font-light tracking-wide text-white translate-y-full transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:translate-y-0 md:text-base">
+                      {project.title}
+                    </p>
+                  </div>
+
+                  {/* Teal left-border accent that draws in on hover */}
+                  <span className="absolute left-0 top-0 h-full w-[2px] bg-[#358CB8] scale-y-0 origin-bottom transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-y-100" />
+                </Link>
+              </Reveal>
+            ))}
+          </div>
+        )}
+
+        {!loading && filtered.length === 0 && (
+          <p className="py-32 text-center text-sm text-white/30">
+            No projects yet.
           </p>
-
-          <h1 className="max-w-2xl text-5xl font-medium leading-[1.05] tracking-tight md:text-6xl">
-            Work That Speaks
-            <br />
-            For Itself
-          </h1>
-
-          <p className="mt-8 max-w-xl text-lg leading-8 text-white/70">
-            A selection of residential, commercial and infrastructure
-            projects delivered across East Africa.
-          </p>
-
-        </div>
-
+        )}
       </section>
 
-      {/* ================= PROJECTS GRID ================= */}
-
-      <section className="relative py-16">
-
-        <div className="mx-auto max-w-7xl px-6 lg:px-8">
-
-          {loading && (
-            <div className="flex justify-center py-24">
-              <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#358CB8] border-t-transparent" />
-            </div>
-          )}
-
-          {!loading && projects.length > 0 && (
-            <>
-              {/* Mobile: single column, name always visible */}
-              <div className="flex flex-col gap-3 md:hidden">
-                {projects.map((project) => (
-                  <Link
-                    key={project.id}
-                    href={`/projects/${project.slug}`}
-                    className="group relative block aspect-[16/11] w-full overflow-hidden rounded-xl"
-                  >
-                    <img
-                      src={project.cover_image}
-                      alt={project.title}
-                      className="h-full w-full object-cover transition-transform duration-700 ease-out group-active:scale-105"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/10 to-transparent" />
-                    <div className="absolute inset-x-0 bottom-0 p-5">
-                      <h3 className="font-serif text-2xl font-normal tracking-tight text-white">
-                        {project.title}
-                      </h3>
-                      <p className="mt-1 text-xs uppercase tracking-[0.25em] text-[#9CCDDA]">
-                        {project.location}
-                      </p>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-
-              {/* Desktop: dense grid, name revealed on hover */}
-              <div className="hidden md:grid md:grid-cols-3 md:gap-2">
-                {projects.map((project) => (
-                  <Link
-                    key={project.id}
-                    href={`/projects/${project.slug}`}
-                    className="group relative block aspect-[4/3] overflow-hidden"
-                  >
-                    <img
-                      src={project.cover_image}
-                      alt={project.title}
-                      className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
-                    />
-
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/0 opacity-0 backdrop-blur-0 transition-all duration-500 ease-out group-hover:bg-black/50 group-hover:opacity-100 group-hover:backdrop-blur-[2px]">
-                      <div className="translate-y-3 text-center transition-transform duration-500 ease-out group-hover:translate-y-0">
-                        <h3 className="font-serif text-2xl font-normal tracking-tight text-white md:text-3xl">
-                          {project.title}
-                        </h3>
-                        <p className="mt-2 text-xs uppercase tracking-[0.25em] text-[#9CCDDA]">
-                          {project.location}
-                        </p>
-                      </div>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            </>
-          )}
-
-          {!loading && projects.length === 0 && (
-            <p className="py-20 text-center text-white/50">
-              No projects yet.
+      {/* ── CTA ────────────────────────────────────────────────────────────── */}
+      <section className="relative z-10 border-t border-white/8 py-24">
+        <div className="mx-auto flex max-w-2xl flex-col items-center gap-6 px-6 text-center">
+          <FadeReveal>
+            <h2 className="text-3xl font-light tracking-tight md:text-4xl">
+              Have a project in mind?
+            </h2>
+          </FadeReveal>
+          <FadeReveal delay={100}>
+            <p className="text-sm leading-7 text-white/45">
+              Let&apos;s talk about what it will take to build it right.
             </p>
-          )}
-
+          </FadeReveal>
+          <FadeReveal delay={200}>
+            <Link
+              href="/contact"
+              className="group relative overflow-hidden rounded-full border border-[#358CB8] px-8 py-3.5 text-[10px] uppercase tracking-[0.3em] text-white transition-colors duration-500"
+            >
+              <span className="absolute inset-0 -translate-x-full bg-[#358CB8] transition-transform duration-500 ease-out group-hover:translate-x-0" />
+              <span className="relative">Get A Quote</span>
+            </Link>
+          </FadeReveal>
         </div>
-
       </section>
-
-      {/* ================= CTA ================= */}
-
-      <section className="relative pb-32 pt-8">
-
-        <div className="mx-auto flex max-w-3xl flex-col items-center gap-6 px-6 text-center lg:px-8">
-
-          <h2 className="text-3xl font-medium md:text-4xl">
-            Have A Project In Mind?
-          </h2>
-
-          <p className="text-lg leading-8 text-white/60">
-            Let&apos;s talk about what it will take to build it right.
-          </p>
-
-          <Link
-            href="/contact"
-            className="rounded-full bg-[#358CB8] px-8 py-4 font-medium text-white transition hover:bg-[#144B60]"
-          >
-            Get A Quote
-          </Link>
-
-        </div>
-
-      </section>
-
     </main>
   );
 }

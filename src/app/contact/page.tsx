@@ -7,7 +7,7 @@ import Image from "next/image";
 
 const WHATSAPP_NUMBER = "254795853879";
 const WHATSAPP_MESSAGE = "Hi Archstruc Group, I'm interested in your services.";
-const EMAIL = "archstrucgroup@gmail.com";
+const EMAIL = "archstrucg@gmail.com";
 
 interface ContactMethod {
   label: string;
