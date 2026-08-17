@@ -81,7 +81,12 @@ function FadeReveal({
     const el = ref.current;
     if (!el) return;
     const observer = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) { setVisible(true); observer.disconnect(); } },
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setVisible(true);
+          observer.disconnect();
+        }
+      },
       { threshold: 0.1 }
     );
     observer.observe(el);
@@ -92,7 +97,9 @@ function FadeReveal({
     <div
       ref={ref}
       style={{ transitionDelay: `${delay}ms` }}
-      className={`transition-all duration-700 ease-out ${visible ? "translate-y-0 opacity-100" : "translate-y-5 opacity-0"}`}
+      className={`transition-all duration-700 ease-out ${
+        visible ? "translate-y-0 opacity-100" : "translate-y-5 opacity-0"
+      }`}
     >
       {children}
     </div>
@@ -130,7 +137,7 @@ export default function Projects() {
       : projects.filter((p) => p.category === activeCategory);
 
   return (
-    <main className="relative min-h-screen bg-[#0B0D10] text-white">
+    <main className="relative min-h-screen w-full overflow-x-hidden bg-[#0B0D10] text-white">
       <style>{`
         @keyframes fadeUp {
           from { opacity: 0; transform: translateY(20px); }
@@ -141,20 +148,20 @@ export default function Projects() {
         }
       `}</style>
 
-      {/* Subtle ambient glow */}
-      <div className="pointer-events-none absolute left-1/2 top-0 h-[500px] w-[900px] -translate-x-1/2 rounded-full bg-[#358CB8]/8 blur-[120px]" />
+      {/* Subtle ambient glow (Width restricted to prevent mobile overflow) */}
+      <div className="pointer-events-none absolute left-1/2 top-0 h-[500px] w-full max-w-[900px] -translate-x-1/2 rounded-full bg-[#358CB8]/8 blur-[120px]" />
 
       {/* ── HEADER ─────────────────────────────────────────────────────────── */}
       <header className="relative z-10 mx-auto max-w-[1600px] px-6 pb-10 pt-20 lg:px-10">
         <div className="flex items-end justify-between">
           <h1
-            className="text-3xl font-light tracking-tight text-white animate-fade-up md:text-4xl"
+            className="animate-fade-up text-3xl font-light tracking-tight text-white md:text-4xl"
             style={{ animationDelay: "80ms" }}
           >
             Our Projects
           </h1>
           <span
-            className="text-sm tabular-nums text-white/30 animate-fade-up"
+            className="animate-fade-up text-sm tabular-nums text-white/30"
             style={{ animationDelay: "160ms" }}
           >
             {String(filtered.length).padStart(2, "0")}
@@ -163,7 +170,7 @@ export default function Projects() {
       </header>
 
       {/* ── FILTER BAR ─────────────────────────────────────────────────────── */}
-      <div className="relative z-10 sticky top-0 border-b border-white/8 bg-[#0B0D10]/90 backdrop-blur-md">
+      <div className="sticky top-0 z-10 border-b border-white/8 bg-[#0B0D10]/90 backdrop-blur-md">
         <div className="mx-auto flex max-w-[1600px] items-center gap-1 overflow-x-auto px-6 lg:px-10">
           {categories.map((cat) => (
             <button
@@ -177,7 +184,7 @@ export default function Projects() {
             >
               {cat}
               <span
-                className={`absolute inset-x-4 bottom-0 h-px bg-[#358CB8] transition-transform duration-400 ease-out origin-left ${
+                className={`absolute inset-x-4 bottom-0 h-px origin-left bg-[#358CB8] transition-transform duration-400 ease-out ${
                   activeCategory === cat ? "scale-x-100" : "scale-x-0"
                 }`}
               />
@@ -195,7 +202,7 @@ export default function Projects() {
         )}
 
         {!loading && filtered.length > 0 && (
-          <div className="mx-auto grid max-w-[1600px] grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 px-6 lg:px-10 gap-3">
+          <div className="mx-auto grid max-w-[1600px] grid-cols-1 gap-3 px-6 sm:grid-cols-2 lg:grid-cols-3 lg:px-10">
             {filtered.map((project, i) => (
               <Reveal key={project.id} delay={(i % 3) * 120}>
                 <Link
@@ -215,14 +222,14 @@ export default function Projects() {
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent" />
 
                   {/* Title — hidden until hover, slides up from bottom */}
-                  <div className="absolute inset-x-0 bottom-0 overflow-hidden px-5 pb-5 pointer-events-none">
-                    <p className="text-sm font-light tracking-wide text-white translate-y-full transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:translate-y-0 md:text-base">
+                  <div className="pointer-events-none absolute inset-x-0 bottom-0 overflow-hidden px-5 pb-5">
+                    <p className="translate-y-full text-sm font-light tracking-wide text-white transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:translate-y-0 md:text-base">
                       {project.title}
                     </p>
                   </div>
 
                   {/* Teal left-border accent that draws in on hover */}
-                  <span className="absolute left-0 top-0 h-full w-[2px] bg-[#358CB8] scale-y-0 origin-bottom transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-y-100" />
+                  <span className="absolute left-0 top-0 h-full w-[2px] origin-bottom scale-y-0 bg-[#358CB8] transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-y-100" />
                 </Link>
               </Reveal>
             ))}
