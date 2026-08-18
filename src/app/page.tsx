@@ -214,7 +214,6 @@ export default function Home() {
     if (!el) return;
     const index = Math.round(el.scrollLeft / el.clientWidth);
     if (index !== projectIndex) {
-      // Flash title: hide then show
       setTitleVisible(false);
       if (titleTimeoutRef.current) clearTimeout(titleTimeoutRef.current);
       titleTimeoutRef.current = setTimeout(() => {
@@ -239,6 +238,30 @@ export default function Home() {
         }
         .title-in {
           animation: slideUp 0.25s cubic-bezier(0.16,1,0.3,1) both;
+        }
+        @keyframes navFadeIn {
+          from { opacity: 0; transform: translateY(-6px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        .nav-link {
+          animation: navFadeIn 0.4s cubic-bezier(0.16,1,0.3,1) both;
+        }
+        .nav-link:nth-child(1) { animation-delay: 0.05s; }
+        .nav-link:nth-child(2) { animation-delay: 0.1s; }
+        .nav-link:nth-child(3) { animation-delay: 0.15s; }
+        .nav-link:nth-child(4) { animation-delay: 0.2s; }
+        @keyframes pulseRing {
+          0%   { transform: scale(1);    opacity: 0.6; }
+          70%  { transform: scale(1.18); opacity: 0; }
+          100% { transform: scale(1.18); opacity: 0; }
+        }
+        .quote-ring::before {
+          content: '';
+          position: absolute;
+          inset: 0;
+          border-radius: 9999px;
+          border: 1.5px solid #358CB8;
+          animation: pulseRing 2s ease-out infinite;
         }
       `}</style>
 
@@ -287,11 +310,11 @@ export default function Home() {
           </Link>
 
           <div className="hidden items-center gap-10 lg:flex">
-            {["Home", "Services", "Projects", "Contact"].map((item) => (
+            {["Home", "Projects", "Contacts", "Services"].map((item) => (
               <Link
                 key={item}
                 href={item === "Home" ? "/" : `/${item.toLowerCase()}`}
-                className="relative text-sm text-white/80 transition hover:text-white after:absolute after:left-0 after:-bottom-1 after:h-px after:w-0 after:bg-[#358CB8] after:transition-all hover:after:w-full"
+                className="nav-link relative text-base font-medium text-[#358CB8] transition-all duration-200 hover:text-[#9CCBDA] after:absolute after:left-0 after:-bottom-1 after:h-[1.5px] after:w-0 after:bg-[#358CB8] after:transition-all after:duration-300 hover:after:w-full"
               >
                 {item}
               </Link>
@@ -300,7 +323,8 @@ export default function Home() {
 
           <Link
             href="/contact"
-            className="liquid-glass liquid-glass-gold hidden rounded-full px-6 py-3 text-sm font-medium text-[#358CB8] transition hover:scale-105 lg:block"
+            className="quote-ring liquid-glass liquid-glass-gold relative hidden rounded-full px-7 py-3 text-sm font-semibold text-white transition-all duration-200 hover:scale-105 hover:bg-[#358CB8]/30 lg:block"
+            style={{ background: "linear-gradient(135deg, rgba(53,140,184,0.25) 0%, rgba(20,75,96,0.35) 100%)", border: "1.5px solid rgba(53,140,184,0.6)" }}
           >
             Get A Quote
           </Link>
@@ -325,7 +349,7 @@ export default function Home() {
         <div className="fixed inset-0 z-40 bg-black/80 backdrop-blur-md">
           <div className="flex h-full flex-col px-9 pt-32">
             <nav className="flex flex-col gap-7">
-              {["Home", "Services", "Projects", "Contact"].map((item) => (
+              {["Home", "Projects", "Contacts", "Services"].map((item) => (
                 <Link
                   key={item}
                   href={item === "Home" ? "/" : `/${item.toLowerCase()}`}
@@ -347,46 +371,6 @@ export default function Home() {
         </div>
       )}
 
-      {/* ── Hero ─────────────────────────────────────────────────────────── */}
-      <section className="relative flex min-h-screen items-end pb-10 pt-20">
-        <div className="relative z-20 mx-auto w-full max-w-7xl px-6 lg:px-8">
-          <div className="max-w-2xl">
-            <p className="mb-4 text-xs uppercase tracking-[0.35em] text-[#358CB8] sm:text-sm">
-              Engineering Excellence
-            </p>
-            <h1 className="text-2xl font-medium leading-[1.05] tracking-tight md:text-3xl xl:text-4xl">
-              {slides[active].title}
-            </h1>
-            <p className="mt-6 max-w-xl text-base leading-7 text-white/70">
-              {slides[active].subtitle}
-            </p>
-            <div className="mt-9 flex flex-wrap gap-5">
-              <Link
-                href="/projects"
-                className="liquid-glass liquid-glass-gold rounded-xl px-7 py-3 text-sm font-medium text-[#358CB8] transition hover:scale-[1.02]"
-              >
-                Explore Projects
-              </Link>
-              <Link
-                href="/contact"
-                className="liquid-glass rounded-full px-7 py-3 text-sm transition hover:scale-[1.02]"
-              >
-                Contact Us
-              </Link>
-            </div>
-          </div>
-        </div>
-
-        <div className="absolute bottom-10 left-6 z-20 text-sm tracking-[0.3em] text-white/60 lg:left-8">
-          0{active + 1}<span className="mx-2 text-[#358CB8]">/</span>0{slides.length}
-        </div>
-
-        <div className="absolute bottom-10 right-8 z-20 hidden flex-col items-center lg:flex">
-          <span className="rotate-90 text-xs uppercase tracking-[0.4em] text-white/50">Scroll</span>
-          <div className="mt-8 h-16 w-px bg-gradient-to-b from-[#358CB8] to-transparent" />
-        </div>
-      </section>
-
       {/* ── Projects scroller ────────────────────────────────────────────── */}
       <section className="relative h-screen w-full overflow-hidden">
         <div
@@ -406,13 +390,12 @@ export default function Home() {
                 alt={project.title}
                 className="absolute inset-0 h-full w-full object-cover"
               />
-              {/* Lightweight gradient — just enough for text legibility */}
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/30" />
             </Link>
           ))}
         </div>
 
-        {/* Title — only current project's name, bottom-left, fast slide-up on change */}
+        {/* Title */}
         <div className="pointer-events-none absolute bottom-24 left-6 z-20 lg:left-10">
           <p
             key={projectIndex}
@@ -423,9 +406,12 @@ export default function Home() {
         </div>
 
         {/* Eyebrow */}
-        <p className="pointer-events-none absolute top-10 left-1/2 z-10 -translate-x-1/2 text-[10px] uppercase tracking-[0.4em] text-white/40">
-          Featured Projects
-        </p>
+        <div className="pointer-events-none absolute top-24 left-1/2 z-10 -translate-x-1/2 flex flex-col items-center gap-2">
+          <p className="text-[11px] uppercase tracking-[0.5em] text-[#358CB8]/80 font-medium">
+            Featured Projects
+          </p>
+          <div className="h-px w-8 bg-gradient-to-r from-transparent via-[#358CB8]/60 to-transparent" />
+        </div>
 
         {/* Counter */}
         <div className="pointer-events-none absolute bottom-24 right-6 z-10 text-sm tracking-[0.3em] text-white/50 lg:right-8">
@@ -488,6 +474,41 @@ export default function Home() {
               <path d="M9 18l6-6-6-6" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </button>
+        </div>
+      </section>
+
+      {/* ── Hero ─────────────────────────────────────────────────────────── */}
+      <section className="relative flex min-h-screen items-end pb-10 pt-20">
+        <div className="relative z-20 mx-auto w-full max-w-7xl px-6 lg:px-8">
+          <div className="max-w-2xl">
+            <p className="mb-4 text-xs uppercase tracking-[0.35em] text-[#358CB8] sm:text-sm">
+              Engineering Excellence
+            </p>
+            <h1 className="text-2xl font-medium leading-[1.05] tracking-tight md:text-3xl xl:text-4xl">
+              {slides[active].title}
+            </h1>
+            <p className="mt-6 max-w-xl text-base leading-7 text-white/70">
+              {slides[active].subtitle}
+            </p>
+            <div className="mt-9 flex flex-wrap gap-5">
+              <Link
+                href="/projects"
+                className="liquid-glass liquid-glass-gold rounded-xl px-7 py-3 text-sm font-medium text-[#358CB8] transition hover:scale-[1.02]"
+              >
+                Explore Projects
+              </Link>
+              <Link
+                href="/contact"
+                className="liquid-glass rounded-full px-7 py-3 text-sm transition hover:scale-[1.02]"
+              >
+                Contact Us
+              </Link>
+            </div>
+          </div>
+        </div>
+
+        <div className="absolute bottom-10 left-6 z-20 text-sm tracking-[0.3em] text-white/60 lg:left-8">
+          0{active + 1}<span className="mx-2 text-[#358CB8]">/</span>0{slides.length}
         </div>
       </section>
     </main>
