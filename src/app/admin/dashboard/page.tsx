@@ -64,7 +64,8 @@ const C = {
 
 const goldGradient = "linear-gradient(155deg, #E8CC6B, #D4A537 55%, #C79B2E)";
 
-const categories = ["Residential", "Commercial", "Infrastructure"];
+// ── Updated categories with Interior ──────────────────────────────────────────
+const categories = ["Residential", "Commercial", "Infrastructure", "Interior"];
 
 function getGreeting(hour: number): string {
   if (hour < 12) return "Good morning";
@@ -135,18 +136,9 @@ export default function AdminDashboardPage() {
   const handleToggleStatus = async (id: string) => {
     const project = projects.find((p) => p.id === id);
     if (!project) return;
-
     const newStatus = project.status === "completed" ? "ongoing" : "completed";
-
-    const { error } = await supabase
-      .from("projects")
-      .update({ status: newStatus })
-      .eq("id", id);
-
-    if (error) {
-      console.error(error);
-      return;
-    }
+    const { error } = await supabase.from("projects").update({ status: newStatus }).eq("id", id);
+    if (error) { console.error(error); return; }
     loadProjects();
   };
 
@@ -162,11 +154,7 @@ export default function AdminDashboardPage() {
   const now = new Date();
   const greeting = getGreeting(now.getHours());
   const dateLine =
-    now.toLocaleDateString("en-US", {
-      weekday: "long",
-      month: "long",
-      day: "numeric",
-    }) + " • Welcome back";
+    now.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" }) + " • Welcome back";
 
   const stats = {
     total: projects.length,
@@ -212,21 +200,15 @@ export default function AdminDashboardPage() {
           <div className="flex items-center gap-3">
             <div
               className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl text-sm font-semibold"
-              style={{
-                background: `linear-gradient(155deg, ${C.goldLight}, ${C.gold} 60%, ${C.goldDeep})`,
-                color: "#1a1508",
-              }}
+              style={{ background: `linear-gradient(155deg, ${C.goldLight}, ${C.gold} 60%, ${C.goldDeep})`, color: "#1a1508" }}
             >
               AS
             </div>
             <div>
               <div className="text-base font-medium leading-tight">Archstruc</div>
-              <div className="mt-0.5 text-xs uppercase tracking-wide" style={{ color: C.textDim }}>
-                Administrator
-              </div>
+              <div className="mt-0.5 text-xs uppercase tracking-wide" style={{ color: C.textDim }}>Administrator</div>
             </div>
           </div>
-
           <button
             type="button"
             onClick={() => setDrawerOpen(false)}
@@ -240,21 +222,14 @@ export default function AdminDashboardPage() {
 
         <nav className="flex flex-1 flex-col gap-1">
           <NavItem label="Dashboard" icon={Home} active={view === "dashboard"} onClick={() => goTo("dashboard")} />
-          <NavItem
-            label="Projects"
-            icon={Briefcase}
-            active={view === "projects"}
-            onClick={() => goTo("projects")}
-          />
+          <NavItem label="Projects" icon={Briefcase} active={view === "projects"} onClick={() => goTo("projects")} />
           <NavItem
             label="Add project"
             icon={PlusCircle}
             active={view === "add"}
             onClick={() => { setSelectedProject(null); goTo("add"); }}
           />
-
           <div className="mx-1 my-3" style={{ borderTop: `1px solid ${C.border}` }} />
-
           <a
             href="/"
             target="_blank"
@@ -311,9 +286,7 @@ export default function AdminDashboardPage() {
 
             {view === "dashboard" && (
               <div className="min-w-0">
-                <div className="mb-1 truncate text-xs" style={{ color: C.textDim }}>
-                  {dateLine}
-                </div>
+                <div className="mb-1 truncate text-xs" style={{ color: C.textDim }}>{dateLine}</div>
                 <div className="flex items-center gap-2 text-xl font-normal sm:text-2xl lg:text-3xl">
                   <span>{greeting}</span>
                 </div>
@@ -336,9 +309,7 @@ export default function AdminDashboardPage() {
             {view === "edit" && (
               <div className="min-w-0">
                 <div className="mb-1 text-xs" style={{ color: C.textDim }}>Editing</div>
-                <div className="text-xl font-normal sm:text-2xl lg:text-3xl truncate">
-                  {selectedProject?.title}
-                </div>
+                <div className="truncate text-xl font-normal sm:text-2xl lg:text-3xl">{selectedProject?.title}</div>
               </div>
             )}
           </div>
@@ -471,9 +442,7 @@ export default function AdminDashboardPage() {
   );
 }
 
-/* ============================================================
-   SUB-COMPONENTS
-   ============================================================ */
+/* ── Sub-components ──────────────────────────────────────────────────────────── */
 
 function NavItem({ label, icon: Icon, active, onClick }: { label: string; icon: any; active: boolean; onClick: () => void }) {
   return (
@@ -495,11 +464,9 @@ function NavItem({ label, icon: Icon, active, onClick }: { label: string; icon: 
 
 function StatCard({ label, value, tone }: { label: string; value: string | number; tone: string }) {
   const toneBg =
-    tone === "gold"
-      ? "rgba(212,165,55,0.14)"
-      : tone === "emerald"
-      ? "rgba(52,211,153,0.12)"
-      : "rgba(255,255,255,0.06)";
+    tone === "gold" ? "rgba(212,165,55,0.14)"
+    : tone === "emerald" ? "rgba(52,211,153,0.12)"
+    : "rgba(255,255,255,0.06)";
 
   return (
     <div
@@ -532,10 +499,7 @@ function LoadingGrid() {
 }
 
 function ProjectCard({
-  project,
-  onToggleStatus,
-  onDelete,
-  onEdit,
+  project, onToggleStatus, onDelete, onEdit,
 }: {
   project: Project;
   onToggleStatus: (id: string) => void;
@@ -575,7 +539,6 @@ function ProjectCard({
           <span className="h-1.5 w-1.5 rounded-full bg-current" />
           {isCompleted ? "Completed" : "Ongoing"}
         </span>
-
         <span
           className="relative z-10 rounded-full px-2.5 py-1 text-xs font-medium"
           style={{ backgroundColor: "rgba(212,165,55,0.2)", color: C.gold }}
@@ -590,17 +553,12 @@ function ProjectCard({
           <MapPin size={12} className="opacity-70" />
           {project.location}
         </div>
-
         <div className="flex flex-wrap items-center justify-end gap-1.5">
-          <IconButton label="Edit" onClick={onEdit}>
-            <Pencil size={14} />
-          </IconButton>
+          <IconButton label="Edit" onClick={onEdit}><Pencil size={14} /></IconButton>
           <IconButton label={isCompleted ? "Mark ongoing" : "Mark completed"} onClick={() => onToggleStatus(project.id)}>
             <RefreshCw size={14} />
           </IconButton>
-          <IconButton label="Delete" onClick={() => onDelete(project.id)}>
-            <Trash2 size={14} />
-          </IconButton>
+          <IconButton label="Delete" onClick={() => onDelete(project.id)}><Trash2 size={14} /></IconButton>
         </div>
       </div>
     </motion.div>
@@ -613,10 +571,7 @@ function IconButton({ children, label, onClick }: { children: React.ReactNode; l
       type="button"
       title={label}
       aria-label={label}
-      onClick={(e) => {
-        e.stopPropagation();
-        onClick?.();
-      }}
+      onClick={(e) => { e.stopPropagation(); onClick?.(); }}
       className="flex h-8 w-8 items-center justify-center rounded-lg transition-all duration-200 hover:brightness-125"
       style={{ border: `1px solid ${C.border}`, backgroundColor: "rgba(255,255,255,0.03)", color: C.textMuted }}
     >
@@ -651,9 +606,7 @@ function EmptyState({ onAdd }: { onAdd: () => void }) {
   );
 }
 
-/* ============================================================
-   PROJECT FORM — used for both Add and Edit
-   ============================================================ */
+/* ── Project Form ────────────────────────────────────────────────────────────── */
 
 function Field({
   label, placeholder, value, onChange, type = "text",
@@ -676,10 +629,7 @@ function Field({
 }
 
 function ProjectForm({
-  mode,
-  existingProject,
-  onCancel,
-  onSaved,
+  mode, existingProject, onCancel, onSaved,
 }: {
   mode: "create" | "edit";
   existingProject?: Project;
@@ -706,6 +656,10 @@ function ProjectForm({
   const [newFiles, setNewFiles] = useState<File[]>([]);
   const [newPreviews, setNewPreviews] = useState<string[]>([]);
 
+  // drag-and-drop state
+  const [coverDragging, setCoverDragging] = useState(false);
+  const [galleryDragging, setGalleryDragging] = useState(false);
+
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -721,22 +675,36 @@ function ProjectForm({
     });
   };
 
-  const handleCoverSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    e.target.value = "";
-    if (!file) return;
+  const handleCoverSelect = async (file: File) => {
     setCoverFile(file);
     setCoverPreview(await readFileAsDataURL(file));
   };
 
-  const handleGallerySelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
-    e.target.value = "";
+  const handleGalleryAdd = async (files: File[]) => {
     if (files.length === 0) return;
-
     const previews = await Promise.all(files.map(readFileAsDataURL));
     setNewFiles((prev) => [...prev, ...files]);
     setNewPreviews((prev) => [...prev, ...previews]);
+  };
+
+  // Cover drag handlers
+  const onCoverDragOver = (e: React.DragEvent) => { e.preventDefault(); setCoverDragging(true); };
+  const onCoverDragLeave = () => setCoverDragging(false);
+  const onCoverDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    setCoverDragging(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file && file.type.startsWith("image/")) await handleCoverSelect(file);
+  };
+
+  // Gallery drag handlers
+  const onGalleryDragOver = (e: React.DragEvent) => { e.preventDefault(); setGalleryDragging(true); };
+  const onGalleryDragLeave = () => setGalleryDragging(false);
+  const onGalleryDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    setGalleryDragging(false);
+    const files = Array.from(e.dataTransfer.files).filter((f) => f.type.startsWith("image/"));
+    await handleGalleryAdd(files);
   };
 
   const removeNewGalleryFile = (index: number) => {
@@ -753,10 +721,8 @@ function ProjectForm({
   const uploadFile = async (file: File, folder: string) => {
     const ext = file.name.split(".").pop();
     const path = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-
     const { error: uploadError } = await supabase.storage.from("project-images").upload(path, file);
     if (uploadError) throw uploadError;
-
     const { data } = supabase.storage.from("project-images").getPublicUrl(path);
     return data.publicUrl;
   };
@@ -787,9 +753,7 @@ function ProjectForm({
 
     try {
       let coverUrl = coverPreview;
-      if (coverFile) {
-        coverUrl = await uploadFile(coverFile, "covers");
-      }
+      if (coverFile) coverUrl = await uploadFile(coverFile, "covers");
 
       const payload = {
         slug: slug.trim() || slugify(title),
@@ -812,15 +776,11 @@ function ProjectForm({
           .insert(payload)
           .select("id")
           .single();
-
         if (insertError) throw insertError;
         projectId = data.id;
       } else {
         if (!projectId) throw new Error("Missing project id");
-        const { error: updateError } = await supabase
-          .from("projects")
-          .update(payload)
-          .eq("id", projectId);
+        const { error: updateError } = await supabase.from("projects").update(payload).eq("id", projectId);
         if (updateError) throw updateError;
       }
 
@@ -890,29 +850,50 @@ function ProjectForm({
         />
       </div>
 
-      {/* Cover image */}
+      {/* ── Cover image with drag-and-drop ── */}
       <div className="mb-4">
         <label className="mb-2 block text-xs font-medium" style={{ color: C.textMuted }}>Cover image</label>
-        <div className="flex items-center gap-4">
-          {coverPreview && (
-            <img src={coverPreview} alt="" className="h-20 w-32 rounded-lg object-cover" />
+        <div
+          onDragOver={onCoverDragOver}
+          onDragLeave={onCoverDragLeave}
+          onDrop={onCoverDrop}
+          onClick={() => coverInputRef.current?.click()}
+          className="relative cursor-pointer overflow-hidden rounded-xl transition-all duration-200"
+          style={{
+            border: `1.5px dashed ${coverDragging ? C.gold : C.border}`,
+            backgroundColor: coverDragging ? "rgba(212,165,55,0.06)" : "rgba(255,255,255,0.02)",
+          }}
+        >
+          {coverPreview ? (
+            <div className="relative">
+              <img src={coverPreview} alt="Cover" className="h-40 w-full object-cover" />
+              <div className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition-opacity hover:opacity-100">
+                <p className="text-xs text-white">Click or drop to replace</p>
+              </div>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center gap-2 py-10">
+              <Upload size={20} style={{ color: C.textDim }} />
+              <p className="text-xs" style={{ color: C.textDim }}>
+                {coverDragging ? "Drop to set as cover" : "Drag & drop or click to upload cover"}
+              </p>
+            </div>
           )}
-          <label
-            onClick={() => coverInputRef.current?.click()}
-            className="cursor-pointer rounded-xl px-4 py-3 text-center text-xs transition-colors flex items-center justify-center gap-2"
-            style={{ border: `1px dashed ${C.border}`, color: C.textDim }}
-          >
-            <Upload size={14} />
-            {coverPreview ? "Replace cover" : "Upload cover"}
-            <input ref={coverInputRef} type="file" accept="image/*" className="hidden" onChange={handleCoverSelect} />
-          </label>
         </div>
+        <input
+          ref={coverInputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) handleCoverSelect(f); }}
+        />
       </div>
 
-      {/* Gallery */}
+      {/* ── Gallery with drag-and-drop ── */}
       <div className="mb-4">
         <label className="mb-2 block text-xs font-medium" style={{ color: C.textMuted }}>Gallery photos</label>
 
+        {/* Existing gallery thumbnails */}
         {existingGallery.length > 0 && (
           <div className="mb-3 grid grid-cols-3 gap-2 sm:grid-cols-4">
             {existingGallery.map((img) => (
@@ -920,7 +901,7 @@ function ProjectForm({
                 <img src={img.storage_path} alt="" className="h-full w-full object-cover" />
                 <button
                   type="button"
-                  onClick={() => removeExistingGalleryImage(img)}
+                  onClick={(e) => { e.stopPropagation(); removeExistingGalleryImage(img); }}
                   className="absolute inset-0 flex items-center justify-center bg-black/55 opacity-0 transition-opacity group-hover:opacity-100"
                   title="Remove"
                 >
@@ -931,6 +912,7 @@ function ProjectForm({
           </div>
         )}
 
+        {/* New file previews */}
         {newPreviews.length > 0 && (
           <div className="mb-3 grid grid-cols-3 gap-2 sm:grid-cols-4">
             {newPreviews.map((preview, i) => (
@@ -939,7 +921,7 @@ function ProjectForm({
                 <span className="absolute left-1 top-1 rounded bg-blue-500 px-1.5 py-0.5 text-[9px] font-bold text-white">NEW</span>
                 <button
                   type="button"
-                  onClick={() => removeNewGalleryFile(i)}
+                  onClick={(e) => { e.stopPropagation(); removeNewGalleryFile(i); }}
                   className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition-opacity group-hover:opacity-100"
                 >
                   <X size={16} />
@@ -949,24 +931,50 @@ function ProjectForm({
           </div>
         )}
 
-        <label
+        {/* Drop zone */}
+        <div
+          onDragOver={onGalleryDragOver}
+          onDragLeave={onGalleryDragLeave}
+          onDrop={onGalleryDrop}
           onClick={() => galleryInputRef.current?.click()}
-          className="flex cursor-pointer items-center justify-center gap-2 rounded-xl p-5 text-center text-xs transition-colors"
-          style={{ border: `1px dashed ${C.border}`, color: C.textDim }}
+          className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl py-8 transition-all duration-200"
+          style={{
+            border: `1.5px dashed ${galleryDragging ? C.gold : C.border}`,
+            backgroundColor: galleryDragging ? "rgba(212,165,55,0.06)" : "rgba(255,255,255,0.02)",
+          }}
         >
-          <Upload size={14} />
-          Drop images here, or click to upload
-          <input ref={galleryInputRef} type="file" accept="image/*" multiple className="hidden" onChange={handleGallerySelect} />
-        </label>
+          <Upload size={18} style={{ color: galleryDragging ? C.gold : C.textDim }} />
+          <p className="text-xs" style={{ color: galleryDragging ? C.gold : C.textDim }}>
+            {galleryDragging ? "Drop to add to gallery" : "Drag & drop images here, or click to browse"}
+          </p>
+        </div>
+        <input
+          ref={galleryInputRef}
+          type="file"
+          accept="image/*"
+          multiple
+          className="hidden"
+          onChange={(e) => {
+            const files = Array.from(e.target.files || []);
+            e.target.value = "";
+            handleGalleryAdd(files);
+          }}
+        />
       </div>
 
       {error && (
-        <p className="mb-4 rounded-lg px-3 py-2 text-xs" style={{ backgroundColor: "rgba(248,113,113,0.1)", border: "1px solid rgba(248,113,113,0.25)", color: C.red }}>
+        <p
+          className="mb-4 rounded-lg px-3 py-2 text-xs"
+          style={{ backgroundColor: "rgba(248,113,113,0.1)", border: "1px solid rgba(248,113,113,0.25)", color: C.red }}
+        >
           {error}
         </p>
       )}
 
-      <div className="mt-6 flex flex-col-reverse justify-end gap-2.5 pt-5 sm:flex-row" style={{ borderTop: `1px solid ${C.border}` }}>
+      <div
+        className="mt-6 flex flex-col-reverse justify-end gap-2.5 pt-5 sm:flex-row"
+        style={{ borderTop: `1px solid ${C.border}` }}
+      >
         <button
           type="button"
           onClick={onCancel}
