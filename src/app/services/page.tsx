@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 
 const values = [
   { title: "Precision", description: "No room for guesswork." },
@@ -62,6 +63,7 @@ function Counter({ to, suffix = "" }: { to: number; suffix?: string }) {
 }
 
 export default function AboutServices() {
+  const router = useRouter();
   const servicesRef = useRef<HTMLDivElement>(null);
 
   // stagger service rows on scroll
@@ -119,6 +121,17 @@ export default function AboutServices() {
           animation: lineGrow 1.2s cubic-bezier(0.16,1,0.3,1) 0.4s both;
         }
       `}</style>
+
+      {/* ── BACK BUTTON ───────────────────────────────────────────────────── */}
+      <button
+        onClick={() => router.back()}
+        aria-label="Go back"
+        className="liquid-glass fixed left-5 top-5 z-50 flex h-11 w-11 items-center justify-center rounded-full text-white/80 backdrop-blur-md transition hover:scale-105 hover:text-white sm:left-8 sm:top-8"
+      >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5">
+          <path d="M15 18l-6-6 6-6" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </button>
 
       {/* ── BACKGROUND ─────────────────────────────────────────────────────── */}
       <div className="fixed inset-0 -z-10">

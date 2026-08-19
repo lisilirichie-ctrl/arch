@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 
@@ -255,6 +255,7 @@ function QuoteModal({ open, onClose }: QuoteModalProps) {
 
 function ContactPageInner() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const [quoteOpen, setQuoteOpen] = useState(false);
 
   useEffect(() => {
@@ -265,6 +266,17 @@ function ContactPageInner() {
 
   return (
     <main className="relative bg-[#0D0F12] text-white overflow-hidden">
+      {/* ================= BACK BUTTON ================= */}
+      <button
+        onClick={() => router.back()}
+        aria-label="Go back"
+        className="liquid-glass fixed left-5 top-5 z-50 flex h-11 w-11 items-center justify-center rounded-full text-white/80 transition hover:scale-105 hover:text-white sm:left-8 sm:top-8"
+      >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5">
+          <path d="M15 18l-6-6 6-6" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </button>
+
       {/* ================= BACKGROUND IMAGE + AURORA ================= */}
       <div className="pointer-events-none absolute inset-0 z-0">
         <Image
