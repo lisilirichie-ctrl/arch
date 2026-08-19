@@ -30,6 +30,24 @@ const SLIDE_DURATION = 7000;
 
 const projects = [
   {
+    slug: "M.L Residence",
+    title: "M.L Residence",
+    image:
+      "https://mtmyqbymrcgjnjyjyfgp.supabase.co/storage/v1/object/public/project-images/covers/1787171786491-v3ptlzjkfnd.png",
+  },
+  {
+    slug: "mugutha residence",
+    title: "Mugutha Residence",
+    image:
+      "https://mtmyqbymrcgjnjyjyfgp.supabase.co/storage/v1/object/public/project-images/covers/1787175311168-2kyywjpnvff.png",
+  },
+  {
+    slug: "apex residence",
+    title: "Apex Residence",
+    image:
+      "https://mtmyqbymrcgjnjyjyfgp.supabase.co/storage/v1/object/public/project-images/covers/1787175773391-2rh5wox1i1k.jpg",
+  },
+  {
     slug: "residential-maisonette-croton-ridge",
     title: "Residential Maisonette",
     image:
@@ -46,12 +64,6 @@ const projects = [
     title: "DG Residence",
     image:
       "https://mtmyqbymrcgjnjyjyfgp.supabase.co/storage/v1/object/public/project-images/cover_3483c563-adde-4bb6-b8af-3f055af0f1a1.jpg",
-  },
-  {
-    slug: "tm-apartments",
-    title: "TM Apartments",
-    image:
-      "https://mtmyqbymrcgjnjyjyfgp.supabase.co/storage/v1/object/public/project-images/cover_429ebd5a-7acb-4123-9f6e-c100b5cebb71.jpg",
   },
   {
     slug: "cn-residence",

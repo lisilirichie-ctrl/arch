@@ -41,29 +41,62 @@ export default function ProjectPage() {
 
   const galleryRef = useRef<HTMLDivElement>(null)
   const thumbRefs = useRef<(HTMLButtonElement | null)[]>([])
+useEffect(() => {
+  async function fetchProject() {
+    const rawSlug = Array.isArray(slug) ? slug[0] : slug;
+    const projectSlug = rawSlug ? decodeURIComponent(rawSlug) : "";
 
-  useEffect(() => {
-    async function fetchProject() {
-      const { data: proj } = await supabase
-        .from("projects")
-        .select("*")
-        .eq("slug", slug)
-        .single()
+    console.log("RAW SLUG:", rawSlug);
+    console.log("DECODED SLUG:", projectSlug);
 
-      if (!proj) { setLoading(false); return }
-      setProject(proj)
-
-      const { data: imgs } = await supabase
-        .from("project_images")
-        .select("*")
-        .eq("project_id", proj.id)
-        .order("sort_order")
-
-      if (imgs) setImages(imgs)
-      setLoading(false)
+    if (!projectSlug) {
+      console.error("No project slug found in URL");
+      setLoading(false);
+      return;
     }
-    fetchProject()
-  }, [slug])
+
+    const { data: proj, error: projectError } = await supabase
+      .from("projects")
+      .select("*")
+      .eq("slug", projectSlug)
+      .maybeSingle();
+
+    console.log("PROJECT RESULT:", proj);
+    console.log("PROJECT ERROR:", projectError);
+
+    if (projectError) {
+      console.error("Failed to fetch project:", projectError);
+      setLoading(false);
+      return;
+    }
+
+    if (!proj) {
+      console.error("Project not found for slug:", projectSlug);
+      setLoading(false);
+      return;
+    }
+
+    setProject(proj);
+
+    const { data: imgs, error: imagesError } = await supabase
+      .from("project_images")
+      .select("*")
+      .eq("project_id", proj.id)
+      .order("sort_order");
+
+    if (imagesError) {
+      console.error("Images error:", imagesError);
+    }
+
+    if (imgs) {
+      setImages(imgs);
+    }
+
+    setLoading(false);
+  }
+
+  fetchProject();
+}, [slug]);
 
   const allImages = images.length > 0 ? images.map(i => i.storage_path) : project ? [project.cover_image] : []
 
