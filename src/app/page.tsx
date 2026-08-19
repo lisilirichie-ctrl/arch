@@ -311,7 +311,7 @@ export default function Home() {
       </div>
 
       {/* ── Navbar ───────────────────────────────────────────────────────── */}
-      <nav className="fixed top-0 left-0 z-50 w-full bg-transparent">
+      <nav className="liquid-glass fixed top-0 left-0 z-50 w-full border-b border-white/10 backdrop-blur-md" style={{ background: "linear-gradient(180deg, rgba(8,15,20,0.55) 0%, rgba(8,15,20,0.25) 100%)" }}>
         <div className="flex h-20 w-full items-center justify-between px-6 lg:px-10">
           <Link href="/" className="flex items-center gap-3" onClick={() => setMobileOpen(false)}>
             <img src="/archstruc-icon.png" alt="Archstruc Group" className="h-12 w-12 shrink-0" />
