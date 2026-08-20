@@ -291,19 +291,19 @@ function ContactPageInner() {
       </div>
 
       {/* ================= HEADER ================= */}
-      <section className="relative z-10 pt-40 pb-24">
+      <section className="relative z-10 pt-24 pb-8">
         <div className="mx-auto max-w-7xl px-6 lg:px-8 text-center">
           <p className="uppercase tracking-[0.4em] text-[#358CB8] text-sm">GET IN TOUCH</p>
-          <h1 className="mt-5 text-5xl md:text-6xl font-semibold tracking-tight">
+          <h1 className="mt-4 text-4xl md:text-5xl font-semibold tracking-tight">
             Let&apos;s Build Something Great.
           </h1>
-          <p className="mt-6 max-w-2xl mx-auto text-lg leading-8 text-white/65">
+          <p className="mt-4 max-w-2xl mx-auto text-base md:text-lg leading-7 text-white/65">
             Reach out for consultations, project quotes, or partnership opportunities. Our team responds fast.
           </p>
 
           <button
             onClick={() => setQuoteOpen(true)}
-            className="liquid-glass liquid-glass-gold mt-10 rounded-full px-8 py-4 font-medium text-[#358CB8] transition hover:scale-105"
+            className="liquid-glass liquid-glass-gold mt-6 rounded-full px-8 py-3.5 font-medium text-[#358CB8] transition hover:scale-105"
           >
             Request A Quote
           </button>
@@ -311,18 +311,18 @@ function ContactPageInner() {
       </section>
 
       {/* ================= MAP + LOCATION — 70/30 SPLIT ================= */}
-      <section className="relative z-10 pb-32">
+      <section className="relative z-10 pb-16">
         <div className="mx-auto max-w-6xl px-6 lg:px-8">
-          <div className="mb-10 text-center">
+          <div className="mb-8 text-center">
             <p className="uppercase tracking-[0.4em] text-[#358CB8] text-sm">VISIT US</p>
-            <h2 className="mt-4 text-3xl md:text-4xl font-semibold tracking-tight">
+            <h2 className="mt-3 text-3xl md:text-4xl font-semibold tracking-tight">
               Find Us In Westlands.
             </h2>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-10 gap-6">
             {/* Map — 70% */}
-            <div className="liquid-glass lg:col-span-7 h-[380px] lg:h-[520px] overflow-hidden rounded-3xl">
+            <div className="liquid-glass lg:col-span-7 h-[380px] lg:h-[460px] overflow-hidden rounded-3xl">
               <iframe
                 title="Archstruc Group Location"
                 src={MAP_EMBED_SRC}
@@ -335,15 +335,15 @@ function ContactPageInner() {
             </div>
 
             {/* Info — 30% */}
-            <div className="liquid-glass liquid-glass-gold lg:col-span-3 flex flex-col justify-between rounded-3xl p-8">
-              <div className="space-y-8">
+            <div className="liquid-glass liquid-glass-gold lg:col-span-3 flex flex-col justify-between rounded-3xl p-7">
+              <div className="space-y-6">
                 <div className="flex gap-4">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-6 w-6 shrink-0 text-[#358CB8] mt-1">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-5 w-5 shrink-0 text-[#358CB8] mt-1">
                     <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" strokeLinecap="round" strokeLinejoin="round" />
                     <circle cx="12" cy="10" r="3" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                   <div>
-                    <p className="font-medium">Location</p>
+                    <p className="text-sm font-medium">Location</p>
                     <p className="mt-1 text-sm text-white/60 leading-relaxed">
                       Muthaiga Suites, Westlands District,
                       <br />
@@ -353,7 +353,7 @@ function ContactPageInner() {
                 </div>
 
                 <div className="flex gap-4">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-6 w-6 shrink-0 text-[#358CB8] mt-1">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-5 w-5 shrink-0 text-[#358CB8] mt-1">
                     <path
                       d="M22 16.92v3a2 2 0 0 1-2.18 2 19.8 19.8 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92Z"
                       strokeLinecap="round"
@@ -361,7 +361,7 @@ function ContactPageInner() {
                     />
                   </svg>
                   <div>
-                    <p className="font-medium">Phone</p>
+                    <p className="text-sm font-medium">Phone</p>
                     <p className="mt-1 text-sm text-white/60 leading-relaxed">
                       +254 708 738913
                       <br />
@@ -373,22 +373,40 @@ function ContactPageInner() {
                 </div>
 
                 <div className="flex gap-4">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-6 w-6 shrink-0 text-[#358CB8] mt-1">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-5 w-5 shrink-0 text-[#358CB8] mt-1">
                     <rect x="3" y="5" width="18" height="14" rx="2" strokeLinecap="round" strokeLinejoin="round" />
                     <path d="M3 7l9 6 9-6" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                   <div>
-                    <p className="font-medium">Email</p>
+                    <p className="text-sm font-medium">Email</p>
                     <p className="mt-1 text-sm text-white/60">{EMAIL}</p>
                   </div>
                 </div>
+              </div>
+
+              {/* Social icons — plain, no boxes */}
+              <div className="mt-6 flex items-center gap-4 border-t border-white/10 pt-6">
+                {contactMethods
+                  .filter((m) => m.label !== "Email" && m.label !== "Call Us")
+                  .map((method) => (
+                    <Link
+                      key={method.label}
+                      href={method.href}
+                      target={method.external ? "_blank" : undefined}
+                      rel={method.external ? "noopener noreferrer" : undefined}
+                      aria-label={method.label}
+                      className="text-white/60 transition hover:text-[#358CB8] hover:scale-110 [&_svg]:h-5 [&_svg]:w-5"
+                    >
+                      {method.icon}
+                    </Link>
+                  ))}
               </div>
 
               <Link
                 href={`https://www.google.com/maps?q=Muthaiga+Suites,+Westlands,+Nairobi`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="liquid-glass liquid-glass-gold mt-10 inline-flex items-center justify-center rounded-full px-6 py-3 text-sm font-medium text-[#358CB8] transition hover:scale-[1.02]"
+                className="liquid-glass liquid-glass-gold mt-6 inline-flex items-center justify-center rounded-full px-6 py-3 text-sm font-medium text-[#358CB8] transition hover:scale-[1.02]"
               >
                 Get Directions
               </Link>
@@ -397,38 +415,10 @@ function ContactPageInner() {
         </div>
       </section>
 
-      {/* ================= CONTACT ICONS ================= */}
-      <section className="relative z-10 pb-32">
-        <div className="mx-auto max-w-6xl px-6 lg:px-8">
-          <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
-            {contactMethods.map((method, i) => (
-              <Link
-                key={method.label}
-                href={method.href}
-                target={method.external ? "_blank" : undefined}
-                rel={method.external ? "noopener noreferrer" : undefined}
-                className="liquid-glass liquid-glass-gold group flex flex-col items-center gap-5 rounded-3xl px-6 py-10 text-center transition-transform duration-300 hover:scale-[1.04]"
-              >
-                <div
-                  className="wobble-icon flex h-16 w-16 items-center justify-center rounded-full bg-[#358CB8]/10 text-[#358CB8]"
-                  style={{ animationDelay: `${i * 0.35}s` }}
-                >
-                  {method.icon}
-                </div>
-                <div>
-                  <h3 className="text-lg font-medium">{method.label}</h3>
-                  <p className="mt-2 text-sm text-white/60">{method.value}</p>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* ================= WHATSAPP CTA STRIP ================= */}
-      <section className="relative z-10 pb-32">
+      <section className="relative z-10 pb-24">
         <div className="mx-auto max-w-5xl px-6 lg:px-8">
-          <div className="liquid-glass liquid-glass-gold flex flex-col items-center gap-6 rounded-3xl px-8 py-16 text-center sm:flex-row sm:justify-between sm:text-left">
+          <div className="liquid-glass liquid-glass-gold flex flex-col items-center gap-6 rounded-3xl px-8 py-12 text-center sm:flex-row sm:justify-between sm:text-left">
             <div>
               <h2 className="text-2xl md:text-3xl font-medium">Prefer chatting on WhatsApp?</h2>
               <p className="mt-3 text-white/60">Message us directly and get a response within minutes.</p>
