@@ -72,40 +72,22 @@ const projects = [
       "https://mtmyqbymrcgjnjyjyfgp.supabase.co/storage/v1/object/public/project-images/cover_50053a99-a552-452a-8bf9-f2ca7b509488.jpg",
   },
   {
-    slug: "dw-residence",
-    title: "DW Residence",
+    slug: "amani-residence",
+    title: "Amani Residence",
     image:
-      "https://mtmyqbymrcgjnjyjyfgp.supabase.co/storage/v1/object/public/project-images/cover_6f86a9ff-bdca-4310-abe5-a953d9312ab4.jpg",
+      "https://mtmyqbymrcgjnjyjyfgp.supabase.co/storage/v1/object/public/project-images/covers/1787174436737-o1w27svfbyr.jpg",
   },
   {
-    slug: "interior-juba-1",
-    title: "Interior Design — Juba",
+    slug: "km-residence-tatu-city",
+    title: "K.M Residence",
     image:
-      "https://mtmyqbymrcgjnjyjyfgp.supabase.co/storage/v1/object/public/project-images/cover_78e94d1f-02a5-481c-b2b8-2b8e4b8c2be9.png",
+      "https://mtmyqbymrcgjnjyjyfgp.supabase.co/storage/v1/object/public/project-images/covers/1787169623139-2n98atop6ur.jpeg",
   },
   {
-    slug: "residential-maisonette-tatu-city",
-    title: "Residential Maisonette",
+    slug: "lb-residence",
+    title: "L.B Residence",
     image:
-      "https://mtmyqbymrcgjnjyjyfgp.supabase.co/storage/v1/object/public/project-images/cover_7911cc4d-7d7d-4298-9636-7ebeab12c071.jpg",
-  },
-  {
-    slug: "interior-tatu-city",
-    title: "Interior Design — Tatu City",
-    image:
-      "https://mtmyqbymrcgjnjyjyfgp.supabase.co/storage/v1/object/public/project-images/cover_892828c7-a1d3-4fbd-afff-b92bc46e007c.png",
-  },
-  {
-    slug: "twiga-greens",
-    title: "Twiga Greens",
-    image:
-      "https://mtmyqbymrcgjnjyjyfgp.supabase.co/storage/v1/object/public/project-images/cover_8fcedcf2-4cbd-4251-bb87-34dcc851c54f.jpg",
-  },
-  {
-    slug: "kn-residence",
-    title: "KN Residence",
-    image:
-      "https://mtmyqbymrcgjnjyjyfgp.supabase.co/storage/v1/object/public/project-images/cover_9a63a5d4-1bf6-47ff-896d-e01057987833.jpg",
+      "https://mtmyqbymrcgjnjyjyfgp.supabase.co/storage/v1/object/public/project-images/covers/1787171110460-p545yep2fxh.png",
   },
 ];
 
