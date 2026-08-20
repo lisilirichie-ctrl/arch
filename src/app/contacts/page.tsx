@@ -8,6 +8,8 @@ import Image from "next/image";
 const WHATSAPP_NUMBER = "254795853879";
 const WHATSAPP_MESSAGE = "Hi Archstruc Group, I'm interested in your services.";
 const EMAIL = "archstrucg@gmail.com";
+const MAP_EMBED_SRC =
+  "https://www.google.com/maps?q=Muthaiga+Suites,+Westlands,+Nairobi&output=embed";
 
 interface ContactMethod {
   label: string;
@@ -104,7 +106,6 @@ function QuoteModal({ open, onClose }: QuoteModalProps) {
     details: "",
   });
 
-  // lock body scroll while modal is open
   useEffect(() => {
     if (open) {
       document.body.style.overflow = "hidden";
@@ -116,7 +117,6 @@ function QuoteModal({ open, onClose }: QuoteModalProps) {
     };
   }, [open]);
 
-  // close on Escape
   useEffect(() => {
     function handleKey(e: KeyboardEvent) {
       if (e.key === "Escape") onClose();
@@ -161,13 +161,11 @@ function QuoteModal({ open, onClose }: QuoteModalProps) {
       role="dialog"
       aria-modal="true"
     >
-      {/* backdrop */}
       <div
         className="absolute inset-0 bg-black/70 backdrop-blur-sm"
         onClick={onClose}
       />
 
-      {/* panel */}
       <div className="liquid-glass liquid-glass-gold relative z-10 w-full max-w-lg rounded-3xl p-8 sm:p-10">
         <button
           onClick={onClose}
@@ -309,6 +307,93 @@ function ContactPageInner() {
           >
             Request A Quote
           </button>
+        </div>
+      </section>
+
+      {/* ================= MAP + LOCATION — 70/30 SPLIT ================= */}
+      <section className="relative z-10 pb-32">
+        <div className="mx-auto max-w-6xl px-6 lg:px-8">
+          <div className="mb-10 text-center">
+            <p className="uppercase tracking-[0.4em] text-[#358CB8] text-sm">VISIT US</p>
+            <h2 className="mt-4 text-3xl md:text-4xl font-semibold tracking-tight">
+              Find Us In Westlands.
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-10 gap-6">
+            {/* Map — 70% */}
+            <div className="liquid-glass lg:col-span-7 h-[380px] lg:h-[520px] overflow-hidden rounded-3xl">
+              <iframe
+                title="Archstruc Group Location"
+                src={MAP_EMBED_SRC}
+                width="100%"
+                height="100%"
+                style={{ border: 0, filter: "grayscale(0.15) contrast(1.05)" }}
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+              />
+            </div>
+
+            {/* Info — 30% */}
+            <div className="liquid-glass liquid-glass-gold lg:col-span-3 flex flex-col justify-between rounded-3xl p-8">
+              <div className="space-y-8">
+                <div className="flex gap-4">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-6 w-6 shrink-0 text-[#358CB8] mt-1">
+                    <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" strokeLinecap="round" strokeLinejoin="round" />
+                    <circle cx="12" cy="10" r="3" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                  <div>
+                    <p className="font-medium">Location</p>
+                    <p className="mt-1 text-sm text-white/60 leading-relaxed">
+                      Muthaiga Suites, Westlands District,
+                      <br />
+                      Nairobi. PO Box 20412, 00200
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex gap-4">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-6 w-6 shrink-0 text-[#358CB8] mt-1">
+                    <path
+                      d="M22 16.92v3a2 2 0 0 1-2.18 2 19.8 19.8 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92Z"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                  <div>
+                    <p className="font-medium">Phone</p>
+                    <p className="mt-1 text-sm text-white/60 leading-relaxed">
+                      +254 708 738913
+                      <br />
+                      +254 795 853879
+                      <br />
+                      +254 718 369879
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex gap-4">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-6 w-6 shrink-0 text-[#358CB8] mt-1">
+                    <rect x="3" y="5" width="18" height="14" rx="2" strokeLinecap="round" strokeLinejoin="round" />
+                    <path d="M3 7l9 6 9-6" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                  <div>
+                    <p className="font-medium">Email</p>
+                    <p className="mt-1 text-sm text-white/60">{EMAIL}</p>
+                  </div>
+                </div>
+              </div>
+
+              <Link
+                href={`https://www.google.com/maps?q=Muthaiga+Suites,+Westlands,+Nairobi`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="liquid-glass liquid-glass-gold mt-10 inline-flex items-center justify-center rounded-full px-6 py-3 text-sm font-medium text-[#358CB8] transition hover:scale-[1.02]"
+              >
+                Get Directions
+              </Link>
+            </div>
+          </div>
         </div>
       </section>
 
