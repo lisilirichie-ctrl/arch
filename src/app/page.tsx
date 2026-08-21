@@ -316,7 +316,7 @@ export default function Home() {
           </div>
 
           <Link
-            href="/contact"
+            href="/contacts"
             className="quote-ring liquid-glass liquid-glass-gold relative hidden rounded-full px-7 py-3 text-sm font-semibold text-white transition-all duration-200 hover:scale-105 hover:bg-[#358CB8]/30 lg:block"
             style={{ background: "linear-gradient(135deg, rgba(53,140,184,0.25) 0%, rgba(20,75,96,0.35) 100%)", border: "1.5px solid rgba(53,140,184,0.6)" }}
           >
@@ -355,7 +355,7 @@ export default function Home() {
               ))}
             </nav>
             <Link
-              href="/contact"
+              href="/contacts"
               onClick={() => setMobileOpen(false)}
               className="mt-10 w-fit rounded-full border border-[#358CB8]/40 bg-[#358CB8]/10 px-8 py-3 text-base text-[#358CB8] transition hover:bg-[#358CB8]/20"
             >
