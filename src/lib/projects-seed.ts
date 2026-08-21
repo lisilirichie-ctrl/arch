@@ -1,0 +1,278 @@
+
+export type ProjectCategory = "residential" | "commercial" | "industrial" | "interior"
+export type ProjectStatus = "completed" | "ongoing"
+
+export interface SeedProject {
+  slug: string
+  title: string
+  location: string
+  category: ProjectCategory
+  status: ProjectStatus
+  images: string[]
+}
+
+export const seedProjects: SeedProject[] = [
+  {
+    slug: "unity-homes",
+    title: "Unity Homes",
+    location: "Tatu City, Kiambu County",
+    category: "residential",
+    status: "completed",
+    images: [
+      "https://archstrucgroup.co.ke/archstruc_admin/uploads/1751035588_WhatsApp Image 2025-06-25 at 09.16.23 (1).jpeg",
+      "https://archstrucgroup.co.ke/archstruc_admin/uploads/1751035588_WhatsApp Image 2025-06-25 at 09.16.23.jpeg",
+    ],
+  },
+  {
+    slug: "ncc-kabiyet",
+    title: "Nandi Co-operative Creameries (NCC)",
+    location: "Kabiyet, Nandi County",
+    category: "industrial",
+    status: "completed",
+    images: [
+      "https://archstrucgroup.co.ke/archstruc_admin/uploads/1751034598_WhatsApp Image 2025-06-25 at 08.29.28 (1).jpeg",
+      "https://archstrucgroup.co.ke/archstruc_admin/uploads/1751034598_WhatsApp Image 2025-06-25 at 08.29.28.jpeg",
+      "https://archstrucgroup.co.ke/archstruc_admin/uploads/1751034598_WhatsApp Image 2025-06-25 at 08.29.27.jpeg",
+      "https://archstrucgroup.co.ke/archstruc_admin/uploads/1751034597_WhatsApp Image 2025-06-25 at 08.29.29.jpeg",
+    ],
+  },
+  {
+    slug: "ks-residence",
+    title: "KS Residence",
+    location: "Spring Estate, Thika",
+    category: "residential",
+    status: "completed",
+    images: [
+      "https://archstrucgroup.co.ke/archstruc_admin/uploads/1750833498_WhatsApp Image 2025-06-24 at 11.18.37.jpeg",
+      "https://archstrucgroup.co.ke/archstruc_admin/uploads/1750833498_9bb09b3c-1596-47f7-af80-d594582760b0.jpeg",
+      "https://archstrucgroup.co.ke/archstruc_admin/uploads/1750833498_img79.jpg",
+      "https://archstrucgroup.co.ke/archstruc_admin/uploads/1750833498_img81.jpg",
+      "https://archstrucgroup.co.ke/archstruc_admin/uploads/1750833498_img88.jpg",
+      "https://archstrucgroup.co.ke/archstruc_admin/uploads/1750833498_img90.jpg",
+      "https://archstrucgroup.co.ke/archstruc_admin/uploads/1750833498_img94.jpg",
+      "https://archstrucgroup.co.ke/archstruc_admin/uploads/1750833498_img96.jpg",
+    ],
+  },
+  {
+    slug: "km-residence",
+    title: "KM Residence",
+    location: "Croton Ridge, Kiambu County",
+    category: "residential",
+    status: "completed",
+    images: [
+      "https://archstrucgroup.co.ke/archstruc_admin/uploads/1750828417_IMG_4292.JPG",
+      "https://archstrucgroup.co.ke/archstruc_admin/uploads/1750828417_IMG_4294.JPG",
+      "https://archstrucgroup.co.ke/archstruc_admin/uploads/1750828417_IMG_4296.JPG",
+      "https://archstrucgroup.co.ke/archstruc_admin/uploads/1750828417_IMG_4310.JPG",
+      "https://archstrucgroup.co.ke/archstruc_admin/uploads/1750828417_IMG_4313.JPG",
+    ],
+  },
+  {
+    slug: "dw-residence",
+    title: "DW Residence",
+    location: "Machakos, Machakos County",
+    category: "residential",
+    status: "completed",
+    images: [
+      "https://archstrucgroup.co.ke/archstruc_admin/uploads/1746894223_R10.5 (1).jpg",
+      "https://archstrucgroup.co.ke/archstruc_admin/uploads/1746894223_R11.5.jpg",
+      "https://archstrucgroup.co.ke/archstruc_admin/uploads/1746894223_R12.5.jpg",
+    ],
+  },
+  {
+    slug: "interior-juba-1",
+    title: "Interior Design",
+    location: "Juba, South Sudan",
+    category: "interior",
+    status: "completed",
+    images: [
+      "https://archstrucgroup.co.ke/archstruc_admin/uploads/1746893335_0002 (9).png",
+      "https://archstrucgroup.co.ke/archstruc_admin/uploads/1746893335_0002 (11).png",
+      "https://archstrucgroup.co.ke/archstruc_admin/uploads/1746893335_0004 (6).png",
+      "https://archstrucgroup.co.ke/archstruc_admin/uploads/1746893335_0004 (9).png",
+      "https://archstrucgroup.co.ke/archstruc_admin/uploads/1746893335_0007 (10).png",
+      "https://archstrucgroup.co.ke/archstruc_admin/uploads/1746893335_0010 (2).png",
+      "https://archstrucgroup.co.ke/archstruc_admin/uploads/1746893335_0010.png",
+    ],
+  },
+  {
+    slug: "interior-juba-2",
+    title: "Interior Design",
+    location: "Juba, South Sudan",
+    category: "interior",
+    status: "completed",
+    images: [
+      "https://archstrucgroup.co.ke/archstruc_admin/uploads/1746892815_0006 (9).png",
+      "https://archstrucgroup.co.ke/archstruc_admin/uploads/1746892815_0007 (10).png",
+      "https://archstrucgroup.co.ke/archstruc_admin/uploads/1746892815_0011 (4).png",
+      "https://archstrucgroup.co.ke/archstruc_admin/uploads/1746892815_0018.png",
+      "https://archstrucgroup.co.ke/archstruc_admin/uploads/1746892815_0019.png",
+      "https://archstrucgroup.co.ke/archstruc_admin/uploads/1746892815_0003 (14).png",
+      "https://archstrucgroup.co.ke/archstruc_admin/uploads/1746892815_0020.png",
+    ],
+  },
+  {
+    slug: "tm-apartments",
+    title: "TM Apartments",
+    location: "Kikuyu, Kiambu County",
+    category: "residential",
+    status: "completed",
+    images: ["https://archstrucgroup.co.ke/archstruc_admin/uploads/1746891254_29.jpg"],
+  },
+  {
+    slug: "lm-apartments",
+    title: "LM Apartments",
+    location: "Boburi, Kisii County",
+    category: "residential",
+    status: "completed",
+    images: [
+      "https://archstrucgroup.co.ke/archstruc_admin/uploads/1746890772_7.5.jpg",
+      "https://archstrucgroup.co.ke/archstruc_admin/uploads/1746890772_8.5.jpg",
+      "https://archstrucgroup.co.ke/archstruc_admin/uploads/1746890772_13.55.jpg",
+      "https://archstrucgroup.co.ke/archstruc_admin/uploads/1746890772_14.5.jpg",
+    ],
+  },
+  {
+    slug: "twiga-greens",
+    title: "Twiga Greens",
+    location: "Tatu City, Kiambu County",
+    category: "residential",
+    status: "completed",
+    images: [
+      "https://archstrucgroup.co.ke/archstruc_admin/uploads/683193499f5d6_17q copy (1).jpg",
+      "https://archstrucgroup.co.ke/archstruc_admin/uploads/1746890023_20q.jpg.5.jpg",
+      "https://archstrucgroup.co.ke/archstruc_admin/uploads/1746890023_26q copy.jpg",
+    ],
+  },
+  {
+    slug: "wv-residence",
+    title: "WV Residence",
+    location: "Syokimau, Machakos County",
+    category: "residential",
+    status: "completed",
+    images: [
+      "https://archstrucgroup.co.ke/archstruc_admin/uploads/6831900e322e2_39.5.jpg",
+      "https://archstrucgroup.co.ke/archstruc_admin/uploads/6831900e3456a_40.5.jpg",
+    ],
+  },
+  {
+    slug: "cn-residence",
+    title: "CN Residence",
+    location: "Chuka, Tharaka Nithi County",
+    category: "residential",
+    status: "completed",
+    images: [
+      "https://archstrucgroup.co.ke/archstruc_admin/uploads/1746888083_R17.5.jpg",
+      "https://archstrucgroup.co.ke/archstruc_admin/uploads/1746888083_R16.5.jpg",
+      "https://archstrucgroup.co.ke/archstruc_admin/uploads/1746888083_R6.5.jpg",
+      "https://archstrucgroup.co.ke/archstruc_admin/uploads/1746888083_R10.5.jpg",
+    ],
+  },
+  {
+    slug: "kn-residence",
+    title: "KN Residence",
+    location: "Utawala, Nairobi County",
+    category: "residential",
+    status: "completed",
+    images: [
+      "https://archstrucgroup.co.ke/archstruc_admin/uploads/1746887467_3.5.jpg",
+      "https://archstrucgroup.co.ke/archstruc_admin/uploads/1746887467_5.5.jpg",
+      "https://archstrucgroup.co.ke/archstruc_admin/uploads/1746887467_2.5.jpg",
+    ],
+  },
+  {
+    slug: "dg-residence",
+    title: "DG Residence",
+    location: "Kikuyu, Kiambu County",
+    category: "residential",
+    status: "completed",
+    images: [
+      "https://archstrucgroup.co.ke/archstruc_admin/uploads/1746886891_16.5.jpg",
+      "https://archstrucgroup.co.ke/archstruc_admin/uploads/1746886891_17.5.jpg",
+      "https://archstrucgroup.co.ke/archstruc_admin/uploads/1746886891_18.5.jpg",
+    ],
+  },
+  {
+    slug: "interior-tatu-city",
+    title: "Interior Design",
+    location: "Tatu City, Kiambu County",
+    category: "interior",
+    status: "completed",
+    images: [
+      "https://archstrucgroup.co.ke/archstruc_admin/uploads/1746883950_kitchen.png",
+      "https://archstrucgroup.co.ke/archstruc_admin/uploads/1746883950_output_0 (1).png",
+      "https://archstrucgroup.co.ke/archstruc_admin/uploads/1746883950_output_0 (5).png",
+      "https://archstrucgroup.co.ke/archstruc_admin/uploads/1746883950_output_0 (7).png",
+      "https://archstrucgroup.co.ke/archstruc_admin/uploads/1746883950_output_0 (10).png",
+      "https://archstrucgroup.co.ke/archstruc_admin/uploads/1746883950_output_0 (16).png",
+      "https://archstrucgroup.co.ke/archstruc_admin/uploads/1746883950_output_0 (17).png",
+      "https://archstrucgroup.co.ke/archstruc_admin/uploads/1746883950_output_0.png",
+    ],
+  },
+  {
+    slug: "residential-maisonette-migaa",
+    title: "Residential Maisonette",
+    location: "Migaa Estate, Kiambu County",
+    category: "residential",
+    status: "completed",
+    images: [
+      "https://archstrucgroup.co.ke/archstruc_admin/uploads/1746880900_M8.5.jpg",
+      "https://archstrucgroup.co.ke/archstruc_admin/uploads/68318c6eaccbe_M10.5.jpg",
+      "https://archstrucgroup.co.ke/archstruc_admin/uploads/1746880900_M11.5.jpg",
+    ],
+  },
+  {
+    slug: "residential-maisonette-croton-ridge",
+    title: "Residential Maisonette",
+    location: "Croton Ridge, Kiambu",
+    category: "residential",
+    status: "completed",
+    images: [
+      "https://archstrucgroup.co.ke/archstruc_admin/uploads/1746878517_002v1-min.png",
+      "https://archstrucgroup.co.ke/archstruc_admin/uploads/1746878517_003v1-min.png",
+      "https://archstrucgroup.co.ke/archstruc_admin/uploads/1746878517_005v1-min.png",
+      "https://archstrucgroup.co.ke/archstruc_admin/uploads/1746878517_005v2-min.png",
+    ],
+  },
+  {
+    slug: "residential-maisonette-tatu-city",
+    title: "Residential Maisonette",
+    location: "Tatu City, Kiambu County",
+    category: "residential",
+    status: "completed",
+    images: [
+      "https://archstrucgroup.co.ke/archstruc_admin/uploads/1746876863_54.55.jpg",
+      "https://archstrucgroup.co.ke/archstruc_admin/uploads/1746876863_63.5.jpg",
+      "https://archstrucgroup.co.ke/archstruc_admin/uploads/1746876863_70.jpg",
+      "https://archstrucgroup.co.ke/archstruc_admin/uploads/1746876863_71.55.jpg",
+      "https://archstrucgroup.co.ke/archstruc_admin/uploads/1746876863_72.5.jpg",
+      "https://archstrucgroup.co.ke/archstruc_admin/uploads/1746876863_76.5.jpg",
+    ],
+  },
+  {
+    slug: "interior-westlands",
+    title: "Interior Design",
+    location: "Westlands, Nairobi County",
+    category: "interior",
+    status: "completed",
+    images: [
+      "https://archstrucgroup.co.ke/archstruc_admin/uploads/1746875383_0002 (19)-min.png",
+      "https://archstrucgroup.co.ke/archstruc_admin/uploads/1746875383_0004 (18)-min.png",
+      "https://archstrucgroup.co.ke/archstruc_admin/uploads/1746875383_0006 (14)-min.png",
+      "https://archstrucgroup.co.ke/archstruc_admin/uploads/1746875383_0013 (5)-min.png",
+      "https://archstrucgroup.co.ke/archstruc_admin/uploads/1746875383_0016 (3)-min.png",
+    ],
+  },
+  {
+    slug: "proposed-maisonette-masai-mara",
+    title: "Proposed 4-Bedroom Maisonette",
+    location: "Masai Mara, Narok County",
+    category: "residential",
+    status: "ongoing",
+    images: [
+      "https://archstrucgroup.co.ke/archstruc_admin/uploads/1746874611_2.5.jpg",
+      "https://archstrucgroup.co.ke/archstruc_admin/uploads/1746874611_3.5.jpg",
+      "https://archstrucgroup.co.ke/archstruc_admin/uploads/1746874611_4.5.jpg",
+    ],
+  },
+]
