@@ -326,7 +326,7 @@ useEffect(() => {
           {/* Footer actions */}
           <div className="mt-auto flex flex-col gap-6 pt-10">
             <button
-              onClick={() => router.push("/contact")}
+              onClick={() => router.push("/contacts")}
               className="h-12 w-full rounded-lg bg-[#358CB8] text-sm font-medium text-white transition hover:bg-[#144B60]"
             >
               Request a Quote
