@@ -271,7 +271,7 @@ export default function Projects() {
           </FadeReveal>
           <FadeReveal delay={200}>
             <Link
-              href="/contact"
+              href="/contacts"
               className="group relative overflow-hidden rounded-full border border-[#358CB8] px-8 py-3.5 text-[10px] uppercase tracking-[0.3em] text-white transition-colors duration-500"
             >
               <span className="absolute inset-0 -translate-x-full bg-[#358CB8] transition-transform duration-500 ease-out group-hover:translate-x-0" />

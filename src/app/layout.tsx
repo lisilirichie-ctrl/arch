@@ -16,6 +16,11 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL("https://archstrucgroup.com"),
 
+  icons: {
+    icon: "/icon.png",
+    apple: "/icon.png",
+  },
+
   title: {
     default: "Archstruc Group | Architectural & Engineering Solutions",
     template: "%s | Archstruc Group",
