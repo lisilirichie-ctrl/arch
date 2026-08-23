@@ -30,7 +30,7 @@ const SLIDE_DURATION = 7000;
 
 const projects = [
   {
-    slug: "M.L Residence",
+    slug: "m.l residence",
     title: "M.L Residence",
     image:
       "https://mtmyqbymrcgjnjyjyfgp.supabase.co/storage/v1/object/public/project-images/covers/1787171786491-v3ptlzjkfnd.png",
