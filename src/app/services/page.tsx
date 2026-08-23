@@ -4,11 +4,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
-export const metadata = {
-  alternates: {
-    canonical: 'https://www.archstrucgroup.com',
-  },
-}
+
 
 const values = [
   { title: "Precision", description: "No room for guesswork." },
