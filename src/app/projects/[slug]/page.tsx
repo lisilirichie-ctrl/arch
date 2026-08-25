@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react"
 import { useParams, useRouter } from "next/navigation"
+import Image from "next/image"
 import { createClient } from "@supabase/supabase-js"
 
 const supabase = createClient(
@@ -201,10 +202,14 @@ useEffect(() => {
                 data-gallery-card
                 className="relative h-full w-full flex-shrink-0 snap-center overflow-hidden"
               >
-                <img
+                <Image
                   src={src}
                   alt={`${project.title} ${i + 1}`}
-                  className={`h-full w-full object-cover ${i === activeIndex ? "kenburns-active" : ""}`}
+                  fill
+                  sizes="(max-width: 768px) 100vw, 70vw"
+                  priority={i === 0}
+                  unoptimized={process.env.NODE_ENV !== "production"}
+                  className={`object-cover ${i === activeIndex ? "kenburns-active" : ""}`}
                 />
               </div>
             ))}
@@ -246,10 +251,13 @@ useEffect(() => {
                     onClick={() => scrollToIndex(i)}
                     className="group relative h-14 w-20 flex-shrink-0 overflow-hidden rounded-md"
                   >
-                    <img
+                    <Image
                       src={src}
                       alt=""
-                      className={`h-full w-full object-cover transition ${i === activeIndex ? "opacity-100" : "opacity-45 group-hover:opacity-75"}`}
+                      fill
+                      sizes="80px"
+                      unoptimized={process.env.NODE_ENV !== "production"}
+                      className={`object-cover transition ${i === activeIndex ? "opacity-100" : "opacity-45 group-hover:opacity-75"}`}
                     />
                     <span
                       className="absolute bottom-0 left-0 h-[2px] bg-[#358CB8] transition-all duration-300"

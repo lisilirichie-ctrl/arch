@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { createClient } from "@supabase/supabase-js";
 
@@ -223,11 +224,14 @@ export default function Projects() {
                   className="group relative block overflow-hidden rounded-sm bg-[#111418]"
                 >
                   {/* Image */}
-                  <div className="aspect-[4/3] overflow-hidden">
-                    <img
+                  <div className="relative aspect-[4/3] overflow-hidden">
+                    <Image
                       src={project.cover_image}
                       alt={project.title}
-                      className="h-full w-full object-cover transition-transform duration-[1600ms] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.06]"
+                      fill
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                      unoptimized={process.env.NODE_ENV !== "production"}
+                      className="object-cover transition-transform duration-[1600ms] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.06]"
                     />
                   </div>
 

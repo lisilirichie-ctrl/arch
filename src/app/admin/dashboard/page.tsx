@@ -23,6 +23,35 @@ import {
 
 const supabase = createClient();
 
+// Resizes + compresses an image in the browser before upload.
+// Cuts file size by roughly 70-90% depending on the original, with no
+// visible quality loss for web display. This is what reduces Supabase
+// Storage egress, since every upload/serve is smaller.
+async function compressImage(file: File, maxDimension = 1600, quality = 0.8): Promise<File> {
+  // Skip non-standard images (e.g. GIFs) — just pass them through
+  if (!file.type.startsWith("image/") || file.type === "image/gif") return file;
+
+  const bitmap = await createImageBitmap(file);
+  const scale = Math.min(1, maxDimension / Math.max(bitmap.width, bitmap.height));
+  const width = Math.round(bitmap.width * scale);
+  const height = Math.round(bitmap.height * scale);
+
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return file;
+  ctx.drawImage(bitmap, 0, 0, width, height);
+
+  const blob: Blob | null = await new Promise((resolve) =>
+    canvas.toBlob(resolve, "image/webp", quality)
+  );
+  if (!blob) return file;
+
+  const newName = file.name.replace(/\.[^.]+$/, "") + ".webp";
+  return new File([blob], newName, { type: "image/webp" });
+}
+
 interface ProjectImage {
   id?: string;
   storage_path: string;
@@ -719,9 +748,12 @@ function ProjectForm({
   };
 
   const uploadFile = async (file: File, folder: string) => {
-    const ext = file.name.split(".").pop();
+    const compressed = await compressImage(file);
+    const ext = compressed.name.split(".").pop();
     const path = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-    const { error: uploadError } = await supabase.storage.from("project-images").upload(path, file);
+    const { error: uploadError } = await supabase.storage
+      .from("project-images")
+      .upload(path, compressed, { cacheControl: "31536000", upsert: false });
     if (uploadError) throw uploadError;
     const { data } = supabase.storage.from("project-images").getPublicUrl(path);
     return data.publicUrl;

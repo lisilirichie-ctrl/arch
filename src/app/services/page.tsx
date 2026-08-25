@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
@@ -137,15 +138,22 @@ export default function AboutServices() {
 
       {/* ── BACKGROUND ─────────────────────────────────────────────────────── */}
       <div className="fixed inset-0 -z-10">
-        <img
+        <Image
           src="https://archstrucgroup.co.ke/archstruc_admin/uploads/1746876863_63.5.jpg"
           alt=""
-          className="h-full w-full object-cover"
+          fill
+          sizes="100vw"
+          priority
+          unoptimized
+          className="object-cover"
         />
-        <img
+        <Image
           src="https://archstrucgroup.co.ke/archstruc_admin/uploads/1750828417_IMG_4292.JPG"
           alt=""
-          className="absolute inset-0 h-full w-full object-cover"
+          fill
+          sizes="100vw"
+          unoptimized
+          className="absolute inset-0 object-cover"
           style={{ maskImage: "linear-gradient(to bottom, black 0%, black 40%, transparent 75%)" }}
         />
         <div className="absolute inset-0 bg-black/55" />

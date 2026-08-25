@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 
 const slides = [
   {
@@ -268,7 +269,15 @@ export default function Home() {
             key={i}
             className={`absolute inset-0 transition-opacity duration-[1500ms] ${active === i ? "opacity-100" : "opacity-0"}`}
           >
-            <img src={slide.image} alt="" className="h-full w-full object-cover" />
+            <Image
+              src={slide.image}
+              alt=""
+              fill
+              priority={i === 0}
+              sizes="100vw"
+              unoptimized
+              className="object-cover"
+            />
           </div>
         ))}
         <div className="absolute inset-0 bg-black/60" />
@@ -379,10 +388,13 @@ export default function Home() {
               data-cursor="view"
               className="relative flex h-full w-screen shrink-0 snap-start items-end"
             >
-              <img
+              <Image
                 src={project.image}
                 alt={project.title}
-                className="absolute inset-0 h-full w-full object-cover"
+                fill
+                sizes="100vw"
+                unoptimized={process.env.NODE_ENV !== "production"}
+                className="object-cover"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/30" />
             </Link>
