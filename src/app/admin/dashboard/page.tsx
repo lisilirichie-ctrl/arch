@@ -19,35 +19,28 @@ import {
   Trash2,
   Upload,
   Loader2,
+  AlertTriangle,
+  AlertCircle,
 } from "lucide-react";
 
 const supabase = createClient();
 
-// Resizes + compresses an image in the browser before upload.
-// Cuts file size by roughly 70-90% depending on the original, with no
-// visible quality loss for web display. This is what reduces Supabase
-// Storage egress, since every upload/serve is smaller.
 async function compressImage(file: File, maxDimension = 1600, quality = 0.8): Promise<File> {
-  // Skip non-standard images (e.g. GIFs) — just pass them through
   if (!file.type.startsWith("image/") || file.type === "image/gif") return file;
-
   const bitmap = await createImageBitmap(file);
   const scale = Math.min(1, maxDimension / Math.max(bitmap.width, bitmap.height));
   const width = Math.round(bitmap.width * scale);
   const height = Math.round(bitmap.height * scale);
-
   const canvas = document.createElement("canvas");
   canvas.width = width;
   canvas.height = height;
   const ctx = canvas.getContext("2d");
   if (!ctx) return file;
   ctx.drawImage(bitmap, 0, 0, width, height);
-
   const blob: Blob | null = await new Promise((resolve) =>
     canvas.toBlob(resolve, "image/webp", quality)
   );
   if (!blob) return file;
-
   const newName = file.name.replace(/\.[^.]+$/, "") + ".webp";
   return new File([blob], newName, { type: "image/webp" });
 }
@@ -92,8 +85,6 @@ const C = {
 };
 
 const goldGradient = "linear-gradient(155deg, #E8CC6B, #D4A537 55%, #C79B2E)";
-
-// ── Updated categories with Interior ──────────────────────────────────────────
 const categories = ["Residential", "Commercial", "Infrastructure", "Interior"];
 
 function getGreeting(hour: number): string {
@@ -103,11 +94,149 @@ function getGreeting(hour: number): string {
 }
 
 function slugify(text: string) {
-  return text
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/(^-|-$)/g, "");
+  return text.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+}
+
+/* ── Toast notification system ───────────────────────────────────────────────
+   Lightweight in-page error/success banners so failed actions (delete, toggle
+   status, load) are visible to the user instead of only landing in console. */
+
+interface Toast {
+  id: number;
+  kind: "error" | "success";
+  message: string;
+}
+
+function useToasts() {
+  const [toasts, setToasts] = useState<Toast[]>([]);
+  const push = (kind: Toast["kind"], message: string) => {
+    const id = Date.now() + Math.random();
+    setToasts((prev) => [...prev, { id, kind, message }]);
+    window.setTimeout(() => {
+      setToasts((prev) => prev.filter((t) => t.id !== id));
+    }, 4500);
+  };
+  const dismiss = (id: number) => setToasts((prev) => prev.filter((t) => t.id !== id));
+  return { toasts, push, dismiss };
+}
+
+function ToastStack({ toasts, onDismiss }: { toasts: Toast[]; onDismiss: (id: number) => void }) {
+  return (
+    <div
+      className="pointer-events-none fixed bottom-4 right-4 z-50 flex w-[min(92vw,360px)] flex-col gap-2"
+      aria-live="polite"
+    >
+      <AnimatePresence>
+        {toasts.map((t) => (
+          <motion.div
+            key={t.id}
+            initial={{ opacity: 0, y: 12, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, x: 20 }}
+            transition={{ duration: 0.2 }}
+            className="pointer-events-auto flex items-start gap-2.5 rounded-xl px-4 py-3 text-sm shadow-lg backdrop-blur-sm"
+            style={
+              t.kind === "error"
+                ? { backgroundColor: "rgba(24,14,14,0.95)", border: "1px solid rgba(248,113,113,0.3)", color: "#fecaca" }
+                : { backgroundColor: "rgba(9,20,16,0.95)", border: "1px solid rgba(52,211,153,0.3)", color: "#bbf7d0" }
+            }
+          >
+            <span className="mt-0.5 flex-shrink-0">
+              {t.kind === "error" ? <AlertCircle size={16} /> : <RefreshCw size={16} />}
+            </span>
+            <span className="flex-1">{t.message}</span>
+            <button
+              type="button"
+              onClick={() => onDismiss(t.id)}
+              className="flex-shrink-0 opacity-60 transition-opacity hover:opacity-100"
+              aria-label="Dismiss"
+            >
+              <X size={14} />
+            </button>
+          </motion.div>
+        ))}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+/* ── Themed confirm modal (replaces window.confirm) ──────────────────────── */
+
+function ConfirmDialog({
+  open,
+  title,
+  description,
+  confirmLabel = "Delete",
+  onConfirm,
+  onCancel,
+  busy,
+}: {
+  open: boolean;
+  title: string;
+  description: string;
+  confirmLabel?: string;
+  onConfirm: () => void;
+  onCancel: () => void;
+  busy?: boolean;
+}) {
+  return (
+    <AnimatePresence>
+      {open && (
+        <motion.div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.15 }}
+        >
+          <motion.button
+            aria-label="Cancel"
+            onClick={onCancel}
+            className="absolute inset-0"
+            style={{ backgroundColor: "rgba(0,0,0,0.6)" }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          />
+          <motion.div
+            initial={{ opacity: 0, y: 12, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 8, scale: 0.97 }}
+            transition={{ duration: 0.18, ease: "easeOut" }}
+            className="relative w-full max-w-sm rounded-2xl p-5 sm:p-6"
+            style={{ border: `1px solid ${C.border}`, backgroundColor: C.card }}
+          >
+            <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl" style={{ backgroundColor: "rgba(248,113,113,0.14)" }}>
+              <AlertTriangle size={18} style={{ color: C.red }} />
+            </div>
+            <h3 className="mb-1.5 text-base font-medium">{title}</h3>
+            <p className="mb-5 text-sm" style={{ color: C.textMuted }}>{description}</p>
+            <div className="flex flex-col-reverse gap-2.5 sm:flex-row sm:justify-end">
+              <button
+                type="button"
+                onClick={onCancel}
+                disabled={busy}
+                className="w-full rounded-lg px-4 py-2.5 text-sm font-medium transition-colors disabled:opacity-60 sm:w-auto"
+                style={{ border: `1px solid ${C.border}`, color: C.textMuted }}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={onConfirm}
+                disabled={busy}
+                className="flex w-full items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold text-white transition-colors disabled:opacity-60 sm:w-auto"
+                style={{ backgroundColor: "#DC2626" }}
+              >
+                {busy && <Loader2 size={14} className="animate-spin" />}
+                {confirmLabel}
+              </button>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
 }
 
 export default function AdminDashboardPage() {
@@ -119,10 +248,27 @@ export default function AdminDashboardPage() {
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [checkingAuth, setCheckingAuth] = useState(true);
 
+  // Per-row async state so a single card shows its own spinner instead of blocking the page
+  const [togglingId, setTogglingId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<Project | null>(null);
+
+  const { toasts, push: pushToast, dismiss: dismissToast } = useToasts();
+
   useEffect(() => {
     const checkAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
+      if (!session) { router.replace("/admin/login"); return; }
+
+      // Session alone isn't enough — confirm this user is actually listed
+      // in admin_users before granting access to the dashboard.
+      const { data: adminRow } = await supabase
+        .from("admin_users")
+        .select("user_id")
+        .eq("user_id", session.user.id)
+        .maybeSingle();
+
+      if (!adminRow) {
         router.replace("/admin/login");
         return;
       }
@@ -137,38 +283,56 @@ export default function AdminDashboardPage() {
       .from("projects")
       .select(`*, project_images ( id, storage_path, sort_order )`)
       .order("created_at", { ascending: false });
-
     if (error) {
       console.error(error);
+      pushToast("error", "Couldn't load projects. Check your connection and try again.");
     } else {
       setProjects((data as Project[]) || []);
     }
     setLoading(false);
   };
 
-  const handleDelete = async (id: string) => {
+  const requestDelete = (id: string) => {
     const target = projects.find((p) => p.id === id);
-    const confirmed = window.confirm(
-      `Una uhakika unataka kufuta "${target?.title}"? Hatua hii haiwezi kurudishwa.`
-    );
-    if (!confirmed) return;
+    if (!target) return;
+    setPendingDelete(target);
+  };
 
-    await supabase.from("project_images").delete().eq("project_id", id);
-    const { error } = await supabase.from("projects").delete().eq("id", id);
-    if (error) {
-      console.error(error);
-      return;
+  const confirmDelete = async () => {
+    if (!pendingDelete) return;
+    const { id, title } = pendingDelete;
+    setDeletingId(id);
+    try {
+      const { error: imagesError } = await supabase.from("project_images").delete().eq("project_id", id);
+      if (imagesError) throw imagesError;
+      const { error } = await supabase.from("projects").delete().eq("id", id);
+      if (error) throw error;
+      setProjects((prev) => prev.filter((p) => p.id !== id));
+      pushToast("success", `"${title}" was deleted.`);
+      setPendingDelete(null);
+    } catch (err: any) {
+      console.error(err);
+      pushToast("error", err?.message || `Couldn't delete "${title}". Try again.`);
+    } finally {
+      setDeletingId(null);
     }
-    loadProjects();
   };
 
   const handleToggleStatus = async (id: string) => {
     const project = projects.find((p) => p.id === id);
     if (!project) return;
     const newStatus = project.status === "completed" ? "ongoing" : "completed";
-    const { error } = await supabase.from("projects").update({ status: newStatus }).eq("id", id);
-    if (error) { console.error(error); return; }
-    loadProjects();
+    setTogglingId(id);
+    try {
+      const { error } = await supabase.from("projects").update({ status: newStatus }).eq("id", id);
+      if (error) throw error;
+      setProjects((prev) => prev.map((p) => (p.id === id ? { ...p, status: newStatus } : p)));
+    } catch (err: any) {
+      console.error(err);
+      pushToast("error", err?.message || "Couldn't update project status. Try again.");
+    } finally {
+      setTogglingId(null);
+    }
   };
 
   const handleLogout = async () => {
@@ -176,14 +340,11 @@ export default function AdminDashboardPage() {
     router.push("/admin/login");
   };
 
-  useEffect(() => {
-    if (!checkingAuth) loadProjects();
-  }, [checkingAuth]);
+  useEffect(() => { if (!checkingAuth) loadProjects(); }, [checkingAuth]);
 
   const now = new Date();
   const greeting = getGreeting(now.getHours());
-  const dateLine =
-    now.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" }) + " • Welcome back";
+  const dateLine = now.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" }) + " • Welcome back";
 
   const stats = {
     total: projects.length,
@@ -213,19 +374,28 @@ export default function AdminDashboardPage() {
 
   return (
     <div className="flex min-h-screen w-full" style={{ backgroundColor: C.bg, color: C.text }}>
+      <ToastStack toasts={toasts} onDismiss={dismissToast} />
+
+      <ConfirmDialog
+        open={!!pendingDelete}
+        title="Delete this project?"
+        description={
+          pendingDelete
+            ? `Una uhakika unataka kufuta "${pendingDelete.title}"? Hatua hii haiwezi kurudishwa.`
+            : ""
+        }
+        confirmLabel="Delete project"
+        busy={!!deletingId}
+        onConfirm={confirmDelete}
+        onCancel={() => setPendingDelete(null)}
+      />
+
+      {/* Sidebar */}
       <aside
-        className={`fixed inset-y-0 left-0 z-40 flex w-64 flex-col p-4 pt-6 transition-transform duration-300 ease-out md:translate-x-0 ${
-          drawerOpen ? "translate-x-0" : "-translate-x-full"
-        }`}
-        style={{
-          background: `linear-gradient(180deg, ${C.sidebarFrom}, ${C.sidebarTo})`,
-          borderRight: `1px solid ${C.border}`,
-        }}
+        className={`fixed inset-y-0 left-0 z-40 flex w-64 flex-col p-4 pt-6 transition-transform duration-300 ease-out md:translate-x-0 ${drawerOpen ? "translate-x-0" : "-translate-x-full"}`}
+        style={{ background: `linear-gradient(180deg, ${C.sidebarFrom}, ${C.sidebarTo})`, borderRight: `1px solid ${C.border}` }}
       >
-        <div
-          className="mb-5 flex items-center justify-between gap-3 px-2 pb-6"
-          style={{ borderBottom: `1px solid ${C.border}` }}
-        >
+        <div className="mb-5 flex items-center justify-between gap-3 px-2 pb-6" style={{ borderBottom: `1px solid ${C.border}` }}>
           <div className="flex items-center gap-3">
             <div
               className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl text-sm font-semibold"
@@ -238,13 +408,9 @@ export default function AdminDashboardPage() {
               <div className="mt-0.5 text-xs uppercase tracking-wide" style={{ color: C.textDim }}>Administrator</div>
             </div>
           </div>
-          <button
-            type="button"
-            onClick={() => setDrawerOpen(false)}
-            aria-label="Close menu"
+          <button type="button" onClick={() => setDrawerOpen(false)} aria-label="Close menu"
             className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg md:hidden"
-            style={{ color: C.textMuted, border: `1px solid ${C.border}` }}
-          >
+            style={{ color: C.textMuted, border: `1px solid ${C.border}` }}>
             <X size={16} />
           </button>
         </div>
@@ -252,31 +418,20 @@ export default function AdminDashboardPage() {
         <nav className="flex flex-1 flex-col gap-1">
           <NavItem label="Dashboard" icon={Home} active={view === "dashboard"} onClick={() => goTo("dashboard")} />
           <NavItem label="Projects" icon={Briefcase} active={view === "projects"} onClick={() => goTo("projects")} />
-          <NavItem
-            label="Add project"
-            icon={PlusCircle}
-            active={view === "add"}
-            onClick={() => { setSelectedProject(null); goTo("add"); }}
-          />
+          <NavItem label="Add project" icon={PlusCircle} active={view === "add"}
+            onClick={() => { setSelectedProject(null); goTo("add"); }} />
           <div className="mx-1 my-3" style={{ borderTop: `1px solid ${C.border}` }} />
-          <a
-            href="/"
-            target="_blank"
-            rel="noreferrer"
+          <a href="/" target="_blank" rel="noreferrer"
             className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors"
-            style={{ color: C.textMuted }}
-          >
+            style={{ color: C.textMuted }}>
             <Globe size={17} strokeWidth={1.8} className="opacity-85" />
             View website
           </a>
         </nav>
 
-        <button
-          type="button"
-          onClick={handleLogout}
+        <button type="button" onClick={handleLogout}
           className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors"
-          style={{ color: C.textMuted }}
-        >
+          style={{ color: C.textMuted }}>
           <LogOut size={17} strokeWidth={1.8} className="opacity-85" />
           Logout
         </button>
@@ -284,48 +439,34 @@ export default function AdminDashboardPage() {
 
       <AnimatePresence>
         {drawerOpen && (
-          <motion.button
-            aria-label="Close menu"
-            onClick={() => setDrawerOpen(false)}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="fixed inset-0 z-30 md:hidden"
-            style={{ backgroundColor: "rgba(0,0,0,0.55)" }}
-          />
+          <motion.button aria-label="Close menu" onClick={() => setDrawerOpen(false)}
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-30 md:hidden" style={{ backgroundColor: "rgba(0,0,0,0.55)" }} />
         )}
       </AnimatePresence>
 
+      {/* Main content */}
       <div className="flex min-w-0 flex-1 flex-col md:ml-64">
         <div
           className="sticky top-0 z-20 flex flex-wrap items-center justify-between gap-3 px-4 pb-4 pt-5 sm:px-6 sm:pt-7 lg:px-10 lg:pt-8"
           style={{ background: `linear-gradient(180deg, ${C.bg}e6, transparent)` }}
         >
           <div className="flex min-w-0 items-center gap-3">
-            <button
-              type="button"
-              onClick={() => setDrawerOpen(true)}
-              aria-label="Open menu"
+            <button type="button" onClick={() => setDrawerOpen(true)} aria-label="Open menu"
               className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg md:hidden"
-              style={{ border: `1px solid ${C.border}`, backgroundColor: C.card, color: C.textMuted }}
-            >
+              style={{ border: `1px solid ${C.border}`, backgroundColor: C.card, color: C.textMuted }}>
               <Menu size={17} />
             </button>
 
             {view === "dashboard" && (
               <div className="min-w-0">
                 <div className="mb-1 truncate text-xs" style={{ color: C.textDim }}>{dateLine}</div>
-                <div className="flex items-center gap-2 text-xl font-normal sm:text-2xl lg:text-3xl">
-                  <span>{greeting}</span>
-                </div>
+                <div className="flex items-center gap-2 text-xl font-normal sm:text-2xl lg:text-3xl">{greeting}</div>
               </div>
             )}
             {view === "projects" && (
               <div className="min-w-0">
-                <div className="mb-1 text-xs" style={{ color: C.textDim }}>
-                  {projects.length} {projects.length === 1 ? "project" : "projects"} total
-                </div>
+                <div className="mb-1 text-xs" style={{ color: C.textDim }}>{projects.length} {projects.length === 1 ? "project" : "projects"} total</div>
                 <div className="text-xl font-normal sm:text-2xl lg:text-3xl">Projects</div>
               </div>
             )}
@@ -344,12 +485,9 @@ export default function AdminDashboardPage() {
           </div>
 
           {(view === "dashboard" || view === "projects") && (
-            <button
-              type="button"
-              onClick={() => { setSelectedProject(null); goTo("add"); }}
+            <button type="button" onClick={() => { setSelectedProject(null); goTo("add"); }}
               className="inline-flex w-full flex-shrink-0 items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-transform duration-200 hover:-translate-y-0.5 sm:w-auto sm:justify-start sm:px-5 sm:py-3"
-              style={{ background: goldGradient, color: "#191305" }}
-            >
+              style={{ background: goldGradient, color: "#191305" }}>
               <Plus size={15} strokeWidth={2.4} />
               Add project
             </button>
@@ -359,34 +497,17 @@ export default function AdminDashboardPage() {
         <main className="px-4 pb-16 pt-2 sm:px-6 lg:px-10">
           <AnimatePresence mode="wait">
             {view === "dashboard" && (
-              <motion.section
-                key="dashboard"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.25 }}
-              >
+              <motion.section key="dashboard" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.25 }}>
                 <div className="my-5 grid max-w-4xl grid-cols-2 gap-4 lg:grid-cols-3">
                   <StatCard label="Projects" value={stats.total} tone="gold" />
                   <StatCard label="Completed" value={stats.completed} tone="emerald" />
                   <StatCard label="Ongoing" value={stats.ongoing} tone="slate" />
                 </div>
-
                 <div className="mb-4 flex items-baseline justify-between">
                   <h2 className="text-lg font-medium sm:text-xl">Recent projects</h2>
-                  <button
-                    type="button"
-                    onClick={() => goTo("projects")}
-                    className="text-xs transition-colors sm:text-sm"
-                    style={{ color: C.textMuted }}
-                  >
-                    View all →
-                  </button>
+                  <button type="button" onClick={() => goTo("projects")} className="text-xs transition-colors sm:text-sm" style={{ color: C.textMuted }}>View all →</button>
                 </div>
-
-                {loading ? (
-                  <LoadingGrid />
-                ) : recentProjects.length === 0 ? (
+                {loading ? <LoadingGrid /> : recentProjects.length === 0 ? (
                   <EmptyState onAdd={() => { setSelectedProject(null); goTo("add"); }} />
                 ) : (
                   <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -395,8 +516,10 @@ export default function AdminDashboardPage() {
                         key={project.id}
                         project={project}
                         onToggleStatus={handleToggleStatus}
-                        onDelete={handleDelete}
+                        onDelete={requestDelete}
                         onEdit={() => openEdit(project)}
+                        isToggling={togglingId === project.id}
+                        isDeleting={deletingId === project.id}
                       />
                     ))}
                   </div>
@@ -405,16 +528,8 @@ export default function AdminDashboardPage() {
             )}
 
             {view === "projects" && (
-              <motion.section
-                key="projects"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.25 }}
-              >
-                {loading ? (
-                  <LoadingGrid />
-                ) : projects.length === 0 ? (
+              <motion.section key="projects" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.25 }}>
+                {loading ? <LoadingGrid /> : projects.length === 0 ? (
                   <EmptyState onAdd={() => { setSelectedProject(null); goTo("add"); }} />
                 ) : (
                   <div className="grid grid-cols-1 gap-4 pt-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -423,8 +538,10 @@ export default function AdminDashboardPage() {
                         key={project.id}
                         project={project}
                         onToggleStatus={handleToggleStatus}
-                        onDelete={handleDelete}
+                        onDelete={requestDelete}
                         onEdit={() => openEdit(project)}
+                        isToggling={togglingId === project.id}
+                        isDeleting={deletingId === project.id}
                       />
                     ))}
                   </div>
@@ -433,35 +550,14 @@ export default function AdminDashboardPage() {
             )}
 
             {view === "add" && (
-              <motion.section
-                key="add"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.25 }}
-              >
-                <ProjectForm
-                  mode="create"
-                  onCancel={() => goTo("dashboard")}
-                  onSaved={() => { loadProjects(); goTo("projects"); }}
-                />
+              <motion.section key="add" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.25 }}>
+                <ProjectForm mode="create" onCancel={() => goTo("dashboard")} onSaved={() => { loadProjects(); goTo("projects"); }} />
               </motion.section>
             )}
 
             {view === "edit" && selectedProject && (
-              <motion.section
-                key="edit"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.25 }}
-              >
-                <ProjectForm
-                  mode="edit"
-                  existingProject={selectedProject}
-                  onCancel={() => goTo("projects")}
-                  onSaved={() => { loadProjects(); goTo("projects"); }}
-                />
+              <motion.section key="edit" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.25 }}>
+                <ProjectForm mode="edit" existingProject={selectedProject} onCancel={() => goTo("projects")} onSaved={() => { loadProjects(); goTo("projects"); }} />
               </motion.section>
             )}
           </AnimatePresence>
@@ -475,16 +571,11 @@ export default function AdminDashboardPage() {
 
 function NavItem({ label, icon: Icon, active, onClick }: { label: string; icon: any; active: boolean; onClick: () => void }) {
   return (
-    <button
-      type="button"
-      onClick={onClick}
+    <button type="button" onClick={onClick}
       className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-medium transition-colors"
-      style={
-        active
-          ? { backgroundColor: "rgba(212,165,55,0.14)", color: C.gold, border: `1px solid ${C.borderGoldSoft}` }
-          : { color: C.textMuted, border: "1px solid transparent" }
-      }
-    >
+      style={active
+        ? { backgroundColor: "rgba(212,165,55,0.14)", color: C.gold, border: `1px solid ${C.borderGoldSoft}` }
+        : { color: C.textMuted, border: "1px solid transparent" }}>
       <Icon size={17} strokeWidth={1.8} className={active ? "opacity-100" : "opacity-85"} />
       {label}
     </button>
@@ -492,16 +583,10 @@ function NavItem({ label, icon: Icon, active, onClick }: { label: string; icon: 
 }
 
 function StatCard({ label, value, tone }: { label: string; value: string | number; tone: string }) {
-  const toneBg =
-    tone === "gold" ? "rgba(212,165,55,0.14)"
-    : tone === "emerald" ? "rgba(52,211,153,0.12)"
-    : "rgba(255,255,255,0.06)";
-
+  const toneBg = tone === "gold" ? "rgba(212,165,55,0.14)" : tone === "emerald" ? "rgba(52,211,153,0.12)" : "rgba(255,255,255,0.06)";
   return (
-    <div
-      className="flex h-44 flex-col justify-between rounded-3xl p-5 transition-all duration-300 hover:-translate-y-1"
-      style={{ border: `1px solid ${C.border}`, backgroundColor: C.card }}
-    >
+    <div className="flex h-44 flex-col justify-between rounded-3xl p-5 transition-all duration-300 hover:-translate-y-1"
+      style={{ border: `1px solid ${C.border}`, backgroundColor: C.card }}>
       <div className="flex h-12 w-12 items-center justify-center rounded-2xl text-2xl" style={{ backgroundColor: toneBg }} />
       <div>
         <h2 className="text-3xl font-bold">{value}</h2>
@@ -527,55 +612,35 @@ function LoadingGrid() {
   );
 }
 
-function ProjectCard({
-  project, onToggleStatus, onDelete, onEdit,
-}: {
+function ProjectCard({ project, onToggleStatus, onDelete, onEdit, isToggling, isDeleting }: {
   project: Project;
   onToggleStatus: (id: string) => void;
   onDelete: (id: string) => void;
   onEdit: () => void;
+  isToggling?: boolean;
+  isDeleting?: boolean;
 }) {
   const isCompleted = project.status === "completed";
-
+  const busy = isToggling || isDeleting;
   return (
-    <motion.div
-      layout
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, scale: 0.96 }}
-      transition={{ duration: 0.25, ease: "easeOut" }}
-      onClick={onEdit}
+    <motion.div layout initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.96 }}
+      transition={{ duration: 0.25, ease: "easeOut" }} onClick={onEdit}
       className="cursor-pointer overflow-hidden rounded-2xl transition-all duration-300 hover:-translate-y-1"
-      style={{ border: `1px solid ${C.border}`, backgroundColor: C.card }}
-    >
-      <div
-        className="relative flex h-36 items-end justify-between p-3"
-        style={{
-          backgroundImage: project.cover_image ? `url(${project.cover_image})` : undefined,
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-          backgroundColor: "#0E1116",
-        }}
-      >
-        <span
-          className="relative z-10 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold tracking-wide"
-          style={
-            isCompleted
-              ? { border: "1px solid rgba(52,211,153,0.3)", backgroundColor: "rgba(52,211,153,0.16)", color: C.emerald }
-              : { border: "1px solid rgba(148,163,184,0.25)", backgroundColor: "rgba(148,163,184,0.16)", color: "#cbd5e1" }
-          }
-        >
+      style={{ border: `1px solid ${C.border}`, backgroundColor: C.card, opacity: isDeleting ? 0.5 : 1, pointerEvents: isDeleting ? "none" : "auto" }}>
+      <div className="relative flex h-36 items-end justify-between p-3"
+        style={{ backgroundImage: project.cover_image ? `url(${project.cover_image})` : undefined, backgroundSize: "cover", backgroundPosition: "center", backgroundColor: "#0E1116" }}>
+        <span className="relative z-10 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold tracking-wide"
+          style={isCompleted
+            ? { border: "1px solid rgba(52,211,153,0.3)", backgroundColor: "rgba(52,211,153,0.16)", color: C.emerald }
+            : { border: "1px solid rgba(148,163,184,0.25)", backgroundColor: "rgba(148,163,184,0.16)", color: "#cbd5e1" }}>
           <span className="h-1.5 w-1.5 rounded-full bg-current" />
           {isCompleted ? "Completed" : "Ongoing"}
         </span>
-        <span
-          className="relative z-10 rounded-full px-2.5 py-1 text-xs font-medium"
-          style={{ backgroundColor: "rgba(212,165,55,0.2)", color: C.gold }}
-        >
+        <span className="relative z-10 rounded-full px-2.5 py-1 text-xs font-medium"
+          style={{ backgroundColor: "rgba(212,165,55,0.2)", color: C.gold }}>
           {project.category}
         </span>
       </div>
-
       <div className="p-4 sm:p-5">
         <div className="mb-1 text-base font-medium sm:text-lg">{project.title}</div>
         <div className="mb-3 flex items-center gap-1.5 text-xs" style={{ color: C.textMuted }}>
@@ -583,27 +648,31 @@ function ProjectCard({
           {project.location}
         </div>
         <div className="flex flex-wrap items-center justify-end gap-1.5">
-          <IconButton label="Edit" onClick={onEdit}><Pencil size={14} /></IconButton>
-          <IconButton label={isCompleted ? "Mark ongoing" : "Mark completed"} onClick={() => onToggleStatus(project.id)}>
-            <RefreshCw size={14} />
+          <IconButton label="Edit" onClick={onEdit} disabled={busy}><Pencil size={14} /></IconButton>
+          <IconButton label={isCompleted ? "Mark ongoing" : "Mark completed"} onClick={() => onToggleStatus(project.id)} disabled={busy}>
+            {isToggling ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />}
           </IconButton>
-          <IconButton label="Delete" onClick={() => onDelete(project.id)}><Trash2 size={14} /></IconButton>
+          <IconButton label="Delete" onClick={() => onDelete(project.id)} disabled={busy} danger>
+            {isDeleting ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
+          </IconButton>
         </div>
       </div>
     </motion.div>
   );
 }
 
-function IconButton({ children, label, onClick }: { children: React.ReactNode; label: string; onClick?: () => void }) {
+function IconButton({ children, label, onClick, disabled, danger }: {
+  children: React.ReactNode; label: string; onClick?: () => void; disabled?: boolean; danger?: boolean;
+}) {
   return (
-    <button
-      type="button"
-      title={label}
-      aria-label={label}
+    <button type="button" title={label} aria-label={label} disabled={disabled}
       onClick={(e) => { e.stopPropagation(); onClick?.(); }}
-      className="flex h-8 w-8 items-center justify-center rounded-lg transition-all duration-200 hover:brightness-125"
-      style={{ border: `1px solid ${C.border}`, backgroundColor: "rgba(255,255,255,0.03)", color: C.textMuted }}
-    >
+      className="flex h-8 w-8 items-center justify-center rounded-lg transition-all duration-200 hover:brightness-125 disabled:cursor-not-allowed disabled:opacity-50"
+      style={{
+        border: `1px solid ${danger ? "rgba(248,113,113,0.25)" : C.border}`,
+        backgroundColor: danger ? "rgba(248,113,113,0.06)" : "rgba(255,255,255,0.03)",
+        color: danger ? C.red : C.textMuted,
+      }}>
       {children}
     </button>
   );
@@ -611,23 +680,14 @@ function IconButton({ children, label, onClick }: { children: React.ReactNode; l
 
 function EmptyState({ onAdd }: { onAdd: () => void }) {
   return (
-    <div
-      className="flex flex-col items-center justify-center rounded-2xl px-5 py-16 text-center"
-      style={{ border: `1px dashed ${C.border}`, backgroundColor: "rgba(255,255,255,0.012)" }}
-    >
-      <div className="mb-5 opacity-90">
-        <Briefcase size={64} strokeWidth={1.3} style={{ color: C.gold }} />
-      </div>
+    <div className="flex flex-col items-center justify-center rounded-2xl px-5 py-16 text-center"
+      style={{ border: `1px dashed ${C.border}`, backgroundColor: "rgba(255,255,255,0.012)" }}>
+      <div className="mb-5 opacity-90"><Briefcase size={64} strokeWidth={1.3} style={{ color: C.gold }} /></div>
       <div className="mb-1.5 text-lg">No projects yet</div>
-      <p className="mb-5 max-w-xs text-sm" style={{ color: C.textMuted }}>
-        Once you add a project, it will appear here and on the public site.
-      </p>
-      <button
-        type="button"
-        onClick={onAdd}
+      <p className="mb-5 max-w-xs text-sm" style={{ color: C.textMuted }}>Once you add a project, it will appear here and on the public site.</p>
+      <button type="button" onClick={onAdd}
         className="inline-flex items-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold transition-transform duration-200 hover:-translate-y-0.5"
-        style={{ background: goldGradient, color: "#191305" }}
-      >
+        style={{ background: goldGradient, color: "#191305" }}>
         <Plus size={15} strokeWidth={2.4} />
         Add first project
       </button>
@@ -635,31 +695,100 @@ function EmptyState({ onAdd }: { onAdd: () => void }) {
   );
 }
 
-/* ── Project Form ────────────────────────────────────────────────────────────── */
+/* ── Form field ──────────────────────────────────────────────────────────────── */
 
-function Field({
-  label, placeholder, value, onChange, type = "text",
-}: {
+function Field({ label, placeholder, value, onChange, type = "text" }: {
   label: string; placeholder?: string; value: string; onChange: (v: string) => void; type?: string;
 }) {
   return (
     <div>
       <label className="mb-2 block text-xs font-medium" style={{ color: C.textMuted }}>{label}</label>
-      <input
-        type={type}
-        value={value}
-        placeholder={placeholder}
-        onChange={(e) => onChange(e.target.value)}
+      <input type={type} value={value} placeholder={placeholder} onChange={(e) => onChange(e.target.value)}
         className="w-full rounded-lg p-3 text-sm outline-none transition-colors"
-        style={{ border: `1px solid ${C.border}`, backgroundColor: "#0E1116", color: C.text }}
-      />
+        style={{ border: `1px solid ${C.border}`, backgroundColor: "#0E1116", color: C.text }} />
     </div>
   );
 }
 
-function ProjectForm({
-  mode, existingProject, onCancel, onSaved,
+/* ── Draggable gallery thumbnail ─────────────────────────────────────────────── */
+
+function DraggableThumb({
+  src,
+  isNew,
+  onRemove,
+  index,
+  onDragStart,
+  onDragOver,
+  onDrop,
+  onDragEnd,
+  isDragging,
+  isOver,
 }: {
+  src: string;
+  isNew?: boolean;
+  onRemove: () => void;
+  index: number;
+  onDragStart: (i: number) => void;
+  onDragOver: (i: number) => void;
+  onDrop: (i: number) => void;
+  onDragEnd: () => void;
+  isDragging: boolean;
+  isOver: boolean;
+}) {
+  return (
+    <div
+      draggable
+      onDragStart={() => onDragStart(index)}
+      onDragOver={(e) => { e.preventDefault(); onDragOver(index); }}
+      onDrop={(e) => { e.preventDefault(); onDrop(index); }}
+      onDragEnd={onDragEnd}
+      className="group relative aspect-square overflow-hidden rounded-lg select-none"
+      style={{
+        cursor: isDragging ? "grabbing" : "grab",
+        opacity: isDragging ? 0.35 : 1,
+        transition: "opacity 0.15s, transform 0.15s, outline 0.1s",
+        outline: isOver ? `2px solid ${C.gold}` : "2px solid transparent",
+        outlineOffset: "2px",
+        transform: isOver ? "scale(1.06)" : "scale(1)",
+      }}
+    >
+      <img src={src} alt="" className="h-full w-full object-cover pointer-events-none" />
+
+      {/* Drag hint */}
+      <div
+        className="absolute left-1.5 top-1.5 rounded px-1.5 py-0.5 opacity-0 transition-opacity group-hover:opacity-100 pointer-events-none"
+        style={{ backgroundColor: "rgba(0,0,0,0.72)", color: "#fff", fontSize: 9, letterSpacing: "0.04em" }}
+      >
+        ⠿ drag
+      </div>
+
+      {/* NEW badge */}
+      {isNew && (
+        <span className="absolute right-1.5 top-1.5 rounded bg-blue-500 px-1.5 py-0.5 text-[9px] font-bold text-white pointer-events-none">
+          NEW
+        </span>
+      )}
+
+      {/* Remove overlay */}
+      <button
+        type="button"
+        onClick={(e) => { e.stopPropagation(); onRemove(); }}
+        className="absolute inset-0 flex items-center justify-center bg-black/55 opacity-0 transition-opacity group-hover:opacity-100"
+        title="Remove"
+      >
+        <X size={16} color="#fff" />
+      </button>
+    </div>
+  );
+}
+
+/* ── Project Form ────────────────────────────────────────────────────────────── */
+
+type GalleryItem =
+  | { kind: "existing"; img: ProjectImage; preview: string }
+  | { kind: "new"; file: File; preview: string };
+
+function ProjectForm({ mode, existingProject, onCancel, onSaved }: {
   mode: "create" | "edit";
   existingProject?: Project;
   onCancel: () => void;
@@ -680,73 +809,98 @@ function ProjectForm({
 
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [coverPreview, setCoverPreview] = useState<string | null>(existingProject?.cover_image || null);
-
-  const [existingGallery, setExistingGallery] = useState<ProjectImage[]>(existingProject?.project_images || []);
-  const [newFiles, setNewFiles] = useState<File[]>([]);
-  const [newPreviews, setNewPreviews] = useState<string[]>([]);
-
-  // drag-and-drop state
   const [coverDragging, setCoverDragging] = useState(false);
-  const [galleryDragging, setGalleryDragging] = useState(false);
+
+  const [gallery, setGallery] = useState<GalleryItem[]>(() =>
+    (existingProject?.project_images || [])
+      .slice()
+      .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
+      .map((img) => ({ kind: "existing" as const, img, preview: img.storage_path }))
+  );
+
+  const [galleryDropActive, setGalleryDropActive] = useState(false);
+
+  // Only track which index is being dragged and which is being hovered
+  const dragIndexRef = useRef<number | null>(null);
+  const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
+  const [overIndex, setOverIndex] = useState<number | null>(null);
 
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const readFileAsDataURL = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => {
-        if (typeof reader.result === "string") resolve(reader.result);
-        else reject(new Error("Unexpected file reader result"));
-      };
-      reader.onerror = () => reject(reader.error);
-      reader.readAsDataURL(file);
+  const readFile = (file: File): Promise<string> =>
+    new Promise((res, rej) => {
+      const r = new FileReader();
+      r.onload = () => (typeof r.result === "string" ? res(r.result) : rej(new Error("bad result")));
+      r.onerror = () => rej(r.error);
+      r.readAsDataURL(file);
     });
-  };
 
   const handleCoverSelect = async (file: File) => {
     setCoverFile(file);
-    setCoverPreview(await readFileAsDataURL(file));
+    setCoverPreview(await readFile(file));
   };
 
   const handleGalleryAdd = async (files: File[]) => {
-    if (files.length === 0) return;
-    const previews = await Promise.all(files.map(readFileAsDataURL));
-    setNewFiles((prev) => [...prev, ...files]);
-    setNewPreviews((prev) => [...prev, ...previews]);
+    if (!files.length) return;
+    const items: GalleryItem[] = await Promise.all(
+      files.map(async (file) => ({ kind: "new" as const, file, preview: await readFile(file) }))
+    );
+    setGallery((prev) => [...prev, ...items]);
   };
 
-  // Cover drag handlers
+  // ── Drag start ──────────────────────────────────────────────────────────────
+  const onThumbDragStart = (index: number) => {
+    dragIndexRef.current = index;
+    setDraggingIndex(index);
+    setOverIndex(null);
+  };
+
+  // ── Hover tracking (visual feedback while dragging over another thumbnail) ──
+  const onThumbDragOver = (index: number) => {
+    if (dragIndexRef.current === null || dragIndexRef.current === index) return;
+    setOverIndex(index);
+  };
+
+  // ── Drop: swap the two items ────────────────────────────────────────────────
+  const onThumbDrop = (index: number) => {
+    const from = dragIndexRef.current;
+    if (from === null || from === index) return;
+    setGallery((prev) => {
+      const next = [...prev];
+      // Simple swap — the dragged item and the target item switch positions
+      [next[from], next[index]] = [next[index], next[from]];
+      return next;
+    });
+    setOverIndex(null);
+  };
+
+  // ── Drag end: clear all visual state ───────────────────────────────────────
+  const onThumbDragEnd = () => {
+    dragIndexRef.current = null;
+    setDraggingIndex(null);
+    setOverIndex(null);
+  };
+
+  // ── Cover drop zone ─────────────────────────────────────────────────────────
   const onCoverDragOver = (e: React.DragEvent) => { e.preventDefault(); setCoverDragging(true); };
   const onCoverDragLeave = () => setCoverDragging(false);
   const onCoverDrop = async (e: React.DragEvent) => {
-    e.preventDefault();
-    setCoverDragging(false);
+    e.preventDefault(); setCoverDragging(false);
     const file = e.dataTransfer.files?.[0];
-    if (file && file.type.startsWith("image/")) await handleCoverSelect(file);
+    if (file?.type.startsWith("image/")) await handleCoverSelect(file);
   };
 
-  // Gallery drag handlers
-  const onGalleryDragOver = (e: React.DragEvent) => { e.preventDefault(); setGalleryDragging(true); };
-  const onGalleryDragLeave = () => setGalleryDragging(false);
-  const onGalleryDrop = async (e: React.DragEvent) => {
-    e.preventDefault();
-    setGalleryDragging(false);
+  // ── Gallery add drop zone ───────────────────────────────────────────────────
+  const onGalleryAddDragOver = (e: React.DragEvent) => { e.preventDefault(); setGalleryDropActive(true); };
+  const onGalleryAddDragLeave = () => setGalleryDropActive(false);
+  const onGalleryAddDrop = async (e: React.DragEvent) => {
+    e.preventDefault(); setGalleryDropActive(false);
     const files = Array.from(e.dataTransfer.files).filter((f) => f.type.startsWith("image/"));
     await handleGalleryAdd(files);
   };
 
-  const removeNewGalleryFile = (index: number) => {
-    setNewFiles((prev) => prev.filter((_, i) => i !== index));
-    setNewPreviews((prev) => prev.filter((_, i) => i !== index));
-  };
-
-  const removeExistingGalleryImage = async (img: ProjectImage) => {
-    if (!img.id) return;
-    await supabase.from("project_images").delete().eq("id", img.id);
-    setExistingGallery((prev) => prev.filter((i) => i.id !== img.id));
-  };
-
+  // ── Upload helper ───────────────────────────────────────────────────────────
   const uploadFile = async (file: File, folder: string) => {
     const compressed = await compressImage(file);
     const ext = compressed.name.split(".").pop();
@@ -759,27 +913,24 @@ function ProjectForm({
     return data.publicUrl;
   };
 
-  const uploadGalleryImages = async (projectId: string, startOrder: number) => {
-    for (let i = 0; i < newFiles.length; i++) {
-      const url = await uploadFile(newFiles[i], projectId);
-      await supabase.from("project_images").insert({
-        project_id: projectId,
-        storage_path: url,
-        sort_order: startOrder + i,
-      });
+  // ── Remove ──────────────────────────────────────────────────────────────────
+  const removeGalleryItem = async (index: number) => {
+    const item = gallery[index];
+    if (item.kind === "existing" && item.img.id) {
+      const { error } = await supabase.from("project_images").delete().eq("id", item.img.id);
+      if (error) {
+        setError("Couldn't remove that photo. Try again.");
+        return;
+      }
     }
+    setGallery((prev) => prev.filter((_, i) => i !== index));
   };
 
+  // ── Submit ──────────────────────────────────────────────────────────────────
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!title.trim() || !location.trim()) {
-      setError("Jaza Title na Location kabla ya kusave.");
-      return;
-    }
-    if (!coverFile && !coverPreview) {
-      setError("Weka cover image.");
-      return;
-    }
+    if (!title.trim() || !location.trim()) { setError("Jaza Title na Location kabla ya kusave."); return; }
+    if (!coverFile && !coverPreview) { setError("Weka cover image."); return; }
     setError(null);
     setSaving(true);
 
@@ -803,11 +954,7 @@ function ProjectForm({
       let projectId = existingProject?.id;
 
       if (mode === "create") {
-        const { data, error: insertError } = await supabase
-          .from("projects")
-          .insert(payload)
-          .select("id")
-          .single();
+        const { data, error: insertError } = await supabase.from("projects").insert(payload).select("id").single();
         if (insertError) throw insertError;
         projectId = data.id;
       } else {
@@ -816,8 +963,17 @@ function ProjectForm({
         if (updateError) throw updateError;
       }
 
-      if (newFiles.length > 0 && projectId) {
-        await uploadGalleryImages(projectId, existingGallery.length);
+      // Persist gallery in current visual order (swap-aware)
+      if (projectId) {
+        for (let i = 0; i < gallery.length; i++) {
+          const item = gallery[i];
+          if (item.kind === "existing" && item.img.id) {
+            await supabase.from("project_images").update({ sort_order: i }).eq("id", item.img.id);
+          } else if (item.kind === "new") {
+            const url = await uploadFile(item.file, projectId);
+            await supabase.from("project_images").insert({ project_id: projectId, storage_path: url, sort_order: i });
+          }
+        }
       }
 
       onSaved();
@@ -828,12 +984,12 @@ function ProjectForm({
     }
   }
 
+  const newCount = gallery.filter((g) => g.kind === "new").length;
+
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="w-full max-w-2xl rounded-2xl p-5 sm:p-8"
-      style={{ border: `1px solid ${C.border}`, backgroundColor: C.card }}
-    >
+    <form onSubmit={handleSubmit} className="w-full max-w-2xl rounded-2xl p-5 sm:p-8"
+      style={{ border: `1px solid ${C.border}`, backgroundColor: C.card }}>
+
       <div className="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Field label="Project title" placeholder="e.g. Riverside Residences" value={title} onChange={setTitle} />
         <Field label="Slug (blank = auto)" placeholder="riverside-residences" value={slug} onChange={setSlug} />
@@ -841,26 +997,18 @@ function ProjectForm({
 
         <div>
           <label className="mb-2 block text-xs font-medium" style={{ color: C.textMuted }}>Category</label>
-          <select
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
+          <select value={category} onChange={(e) => setCategory(e.target.value)}
             className="w-full rounded-lg p-3 text-sm outline-none transition-colors"
-            style={{ border: `1px solid ${C.border}`, backgroundColor: "#0E1116", color: C.text }}
-          >
-            {categories.map((c) => (
-              <option key={c} value={c}>{c}</option>
-            ))}
+            style={{ border: `1px solid ${C.border}`, backgroundColor: "#0E1116", color: C.text }}>
+            {categories.map((c) => <option key={c} value={c}>{c}</option>)}
           </select>
         </div>
 
         <div>
           <label className="mb-2 block text-xs font-medium" style={{ color: C.textMuted }}>Status</label>
-          <select
-            value={status}
-            onChange={(e) => setStatus(e.target.value as "ongoing" | "completed")}
+          <select value={status} onChange={(e) => setStatus(e.target.value as "ongoing" | "completed")}
             className="w-full rounded-lg p-3 text-sm outline-none transition-colors"
-            style={{ border: `1px solid ${C.border}`, backgroundColor: "#0E1116", color: C.text }}
-          >
+            style={{ border: `1px solid ${C.border}`, backgroundColor: "#0E1116", color: C.text }}>
             <option value="ongoing">Ongoing</option>
             <option value="completed">Completed</option>
           </select>
@@ -873,29 +1021,20 @@ function ProjectForm({
 
       <div className="mb-4">
         <label className="mb-2 block text-xs font-medium" style={{ color: C.textMuted }}>Description</label>
-        <textarea
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
+        <textarea value={description} onChange={(e) => setDescription(e.target.value)}
           placeholder="What makes this project stand out..."
           className="min-h-[84px] w-full rounded-lg p-3 text-sm outline-none transition-colors"
-          style={{ border: `1px solid ${C.border}`, backgroundColor: "#0E1116", color: C.text }}
-        />
+          style={{ border: `1px solid ${C.border}`, backgroundColor: "#0E1116", color: C.text }} />
       </div>
 
-      {/* ── Cover image with drag-and-drop ── */}
+      {/* Cover image */}
       <div className="mb-4">
         <label className="mb-2 block text-xs font-medium" style={{ color: C.textMuted }}>Cover image</label>
         <div
-          onDragOver={onCoverDragOver}
-          onDragLeave={onCoverDragLeave}
-          onDrop={onCoverDrop}
+          onDragOver={onCoverDragOver} onDragLeave={onCoverDragLeave} onDrop={onCoverDrop}
           onClick={() => coverInputRef.current?.click()}
           className="relative cursor-pointer overflow-hidden rounded-xl transition-all duration-200"
-          style={{
-            border: `1.5px dashed ${coverDragging ? C.gold : C.border}`,
-            backgroundColor: coverDragging ? "rgba(212,165,55,0.06)" : "rgba(255,255,255,0.02)",
-          }}
-        >
+          style={{ border: `1.5px dashed ${coverDragging ? C.gold : C.border}`, backgroundColor: coverDragging ? "rgba(212,165,55,0.06)" : "rgba(255,255,255,0.02)" }}>
           {coverPreview ? (
             <div className="relative">
               <img src={coverPreview} alt="Cover" className="h-40 w-full object-cover" />
@@ -912,115 +1051,79 @@ function ProjectForm({
             </div>
           )}
         </div>
-        <input
-          ref={coverInputRef}
-          type="file"
-          accept="image/*"
-          className="hidden"
-          onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) handleCoverSelect(f); }}
-        />
+        <input ref={coverInputRef} type="file" accept="image/*" className="hidden"
+          onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) handleCoverSelect(f); }} />
       </div>
 
-      {/* ── Gallery with drag-and-drop ── */}
+      {/* Gallery with swap-on-drop reordering */}
       <div className="mb-4">
-        <label className="mb-2 block text-xs font-medium" style={{ color: C.textMuted }}>Gallery photos</label>
+        <div className="mb-2 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <label className="text-xs font-medium" style={{ color: C.textMuted }}>Gallery photos</label>
+            {gallery.length > 1 && (
+              <span className="text-xs" style={{ color: C.textDim }}>· drag to swap</span>
+            )}
+          </div>
+          {gallery.length > 0 && (
+            <span className="text-xs" style={{ color: C.textDim }}>
+              {gallery.length} photo{gallery.length !== 1 ? "s" : ""}
+              {newCount > 0 && <> · <span style={{ color: "#60a5fa" }}>{newCount} new</span></>}
+            </span>
+          )}
+        </div>
 
-        {/* Existing gallery thumbnails */}
-        {existingGallery.length > 0 && (
+        {/* Reorderable thumbnail grid */}
+        {gallery.length > 0 && (
           <div className="mb-3 grid grid-cols-3 gap-2 sm:grid-cols-4">
-            {existingGallery.map((img) => (
-              <div key={img.id} className="group relative aspect-square overflow-hidden rounded-lg">
-                <img src={img.storage_path} alt="" className="h-full w-full object-cover" />
-                <button
-                  type="button"
-                  onClick={(e) => { e.stopPropagation(); removeExistingGalleryImage(img); }}
-                  className="absolute inset-0 flex items-center justify-center bg-black/55 opacity-0 transition-opacity group-hover:opacity-100"
-                  title="Remove"
-                >
-                  <X size={16} />
-                </button>
-              </div>
+            {gallery.map((item, i) => (
+              <DraggableThumb
+                key={item.kind === "existing" ? (item.img.id ?? `ex-${i}`) : `new-${i}-${(item as any).file?.name}`}
+                index={i}
+                src={item.preview}
+                isNew={item.kind === "new"}
+                onRemove={() => removeGalleryItem(i)}
+                onDragStart={onThumbDragStart}
+                onDragOver={onThumbDragOver}
+                onDrop={onThumbDrop}
+                onDragEnd={onThumbDragEnd}
+                isDragging={draggingIndex === i}
+                isOver={overIndex === i && draggingIndex !== i}
+              />
             ))}
           </div>
         )}
 
-        {/* New file previews */}
-        {newPreviews.length > 0 && (
-          <div className="mb-3 grid grid-cols-3 gap-2 sm:grid-cols-4">
-            {newPreviews.map((preview, i) => (
-              <div key={i} className="group relative aspect-square overflow-hidden rounded-lg">
-                <img src={preview} alt="" className="h-full w-full object-cover" />
-                <span className="absolute left-1 top-1 rounded bg-blue-500 px-1.5 py-0.5 text-[9px] font-bold text-white">NEW</span>
-                <button
-                  type="button"
-                  onClick={(e) => { e.stopPropagation(); removeNewGalleryFile(i); }}
-                  className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition-opacity group-hover:opacity-100"
-                >
-                  <X size={16} />
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Drop zone */}
+        {/* Add more images drop zone */}
         <div
-          onDragOver={onGalleryDragOver}
-          onDragLeave={onGalleryDragLeave}
-          onDrop={onGalleryDrop}
+          onDragOver={onGalleryAddDragOver} onDragLeave={onGalleryAddDragLeave} onDrop={onGalleryAddDrop}
           onClick={() => galleryInputRef.current?.click()}
           className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl py-8 transition-all duration-200"
-          style={{
-            border: `1.5px dashed ${galleryDragging ? C.gold : C.border}`,
-            backgroundColor: galleryDragging ? "rgba(212,165,55,0.06)" : "rgba(255,255,255,0.02)",
-          }}
-        >
-          <Upload size={18} style={{ color: galleryDragging ? C.gold : C.textDim }} />
-          <p className="text-xs" style={{ color: galleryDragging ? C.gold : C.textDim }}>
-            {galleryDragging ? "Drop to add to gallery" : "Drag & drop images here, or click to browse"}
+          style={{ border: `1.5px dashed ${galleryDropActive ? C.gold : C.border}`, backgroundColor: galleryDropActive ? "rgba(212,165,55,0.06)" : "rgba(255,255,255,0.02)" }}>
+          <Upload size={18} style={{ color: galleryDropActive ? C.gold : C.textDim }} />
+          <p className="text-xs" style={{ color: galleryDropActive ? C.gold : C.textDim }}>
+            {galleryDropActive ? "Drop to add to gallery" : "Drag & drop images here, or click to browse"}
           </p>
         </div>
-        <input
-          ref={galleryInputRef}
-          type="file"
-          accept="image/*"
-          multiple
-          className="hidden"
-          onChange={(e) => {
-            const files = Array.from(e.target.files || []);
-            e.target.value = "";
-            handleGalleryAdd(files);
-          }}
-        />
+        <input ref={galleryInputRef} type="file" accept="image/*" multiple className="hidden"
+          onChange={(e) => { const files = Array.from(e.target.files || []); e.target.value = ""; handleGalleryAdd(files); }} />
       </div>
 
       {error && (
-        <p
-          className="mb-4 rounded-lg px-3 py-2 text-xs"
-          style={{ backgroundColor: "rgba(248,113,113,0.1)", border: "1px solid rgba(248,113,113,0.25)", color: C.red }}
-        >
+        <p className="mb-4 rounded-lg px-3 py-2 text-xs"
+          style={{ backgroundColor: "rgba(248,113,113,0.1)", border: "1px solid rgba(248,113,113,0.25)", color: C.red }}>
           {error}
         </p>
       )}
 
-      <div
-        className="mt-6 flex flex-col-reverse justify-end gap-2.5 pt-5 sm:flex-row"
-        style={{ borderTop: `1px solid ${C.border}` }}
-      >
-        <button
-          type="button"
-          onClick={onCancel}
+      <div className="mt-6 flex flex-col-reverse justify-end gap-2.5 pt-5 sm:flex-row" style={{ borderTop: `1px solid ${C.border}` }}>
+        <button type="button" onClick={onCancel}
           className="w-full rounded-lg px-4 py-2.5 text-sm font-medium transition-colors sm:w-auto"
-          style={{ border: `1px solid ${C.border}`, color: C.textMuted }}
-        >
+          style={{ border: `1px solid ${C.border}`, color: C.textMuted }}>
           Cancel
         </button>
-        <button
-          type="submit"
-          disabled={saving}
+        <button type="submit" disabled={saving}
           className="flex w-full items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold transition-transform duration-200 hover:-translate-y-0.5 disabled:opacity-60 sm:w-auto"
-          style={{ background: goldGradient, color: "#191305" }}
-        >
+          style={{ background: goldGradient, color: "#191305" }}>
           {saving && <Loader2 size={14} className="animate-spin" />}
           {mode === "create" ? "Save project" : "Save changes"}
         </button>

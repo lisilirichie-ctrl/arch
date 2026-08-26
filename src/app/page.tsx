@@ -1,4 +1,4 @@
-// page.tsx — mobile-responsive fixes
+// page.tsx — mobile-responsive fixes + featured projects zoom motion
 "use client";
 
 import { useEffect, useRef, useState } from "react";
@@ -26,16 +26,15 @@ const slides = [
 const SLIDE_DURATION = 7000;
 
 const projects = [
-  { slug: "m.l residence", title: "M.L Residence", image: "https://mtmyqbymrcgjnjyjyfgp.supabase.co/storage/v1/object/public/project-images/covers/1787171786491-v3ptlzjkfnd.png" },
-  { slug: "mugutha residence", title: "Mugutha Residence", image: "https://mtmyqbymrcgjnjyjyfgp.supabase.co/storage/v1/object/public/project-images/covers/1787175311168-2kyywjpnvff.png" },
-  { slug: "apex residence", title: "Apex Residence", image: "https://mtmyqbymrcgjnjyjyfgp.supabase.co/storage/v1/object/public/project-images/covers/1787175773391-2rh5wox1i1k.jpg" },
-  { slug: "residential-maisonette-croton-ridge", title: "Residential Maisonette", image: "https://mtmyqbymrcgjnjyjyfgp.supabase.co/storage/v1/object/public/project-images/cover_05adb54d-535b-4d8c-8f39-9d5a519cdcbd.png" },
-  { slug: "interior-westlands", title: "Interior Design", image: "https://mtmyqbymrcgjnjyjyfgp.supabase.co/storage/v1/object/public/project-images/cover_10d2e7a5-653b-4291-9337-db7d5a46fdcb.png" },
-  { slug: "dg-residence", title: "DG Residence", image: "https://mtmyqbymrcgjnjyjyfgp.supabase.co/storage/v1/object/public/project-images/cover_3483c563-adde-4bb6-b8af-3f055af0f1a1.jpg" },
-  { slug: "cn-residence", title: "CN Residence", image: "https://mtmyqbymrcgjnjyjyfgp.supabase.co/storage/v1/object/public/project-images/cover_50053a99-a552-452a-8bf9-f2ca7b509488.jpg" },
-  { slug: "amani-residence", title: "Amani Residence", image: "https://mtmyqbymrcgjnjyjyfgp.supabase.co/storage/v1/object/public/project-images/covers/1787174436737-o1w27svfbyr.jpg" },
+  // ── moved from last 3 ──
   { slug: "km-residence-tatu-city", title: "K.M Residence", image: "https://mtmyqbymrcgjnjyjyfgp.supabase.co/storage/v1/object/public/project-images/covers/1787169623139-2n98atop6ur.jpeg" },
   { slug: "lb-residence", title: "L.B Residence", image: "https://mtmyqbymrcgjnjyjyfgp.supabase.co/storage/v1/object/public/project-images/covers/1787171110460-p545yep2fxh.png" },
+  { slug: "amani-residence", title: "Amani Residence", image: "https://mtmyqbymrcgjnjyjyfgp.supabase.co/storage/v1/object/public/project-images/covers/1787174436737-o1w27svfbyr.jpg" },
+  // ── original order ──
+  { slug: "m.l residence", title: "M.L Residence", image: "https://mtmyqbymrcgjnjyjyfgp.supabase.co/storage/v1/object/public/project-images/covers/1787171786491-v3ptlzjkfnd.png" },
+  { slug: "mugutha residence", title: "Mugutha Residence", image: "https://mtmyqbymrcgjnjyjyfgp.supabase.co/storage/v1/object/public/project-images/covers/1787175311168-2kyywjpnvff.png" },
+  { slug: "apex-residence", title: "Apex Residence", image: "https://mtmyqbymrcgjnjyjyfgp.supabase.co/storage/v1/object/public/project-images/covers/1787175773391-2rh5wox1i1k.jpg" },
+  { slug: "cn-residence", title: "CN Residence", image: "https://mtmyqbymrcgjnjyjyfgp.supabase.co/storage/v1/object/public/project-images/cover_50053a99-a552-452a-8bf9-f2ca7b509488.jpg" },
 ];
 
 const socials = [
@@ -105,6 +104,9 @@ export default function Home() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [projectIndex, setProjectIndex] = useState(0);
   const [titleVisible, setTitleVisible] = useState(true);
+  // Bumped every time a new project becomes active so its Ken Burns
+  // zoom animation restarts (remount key trick below).
+  const [zoomKey, setZoomKey] = useState(0);
   const projectScrollerRef = useRef<HTMLDivElement>(null);
   const titleTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -122,6 +124,7 @@ export default function Home() {
       if (titleTimeoutRef.current) clearTimeout(titleTimeoutRef.current);
       titleTimeoutRef.current = setTimeout(() => {
         setProjectIndex(index);
+        setZoomKey((k) => k + 1);
         setTitleVisible(true);
       }, 120);
     }
@@ -165,26 +168,36 @@ export default function Home() {
         }
         /* FIX: Prevent iOS rubber-band scroll from revealing white gaps */
         html, body { overscroll-behavior: none; }
+
+        /* Ken Burns zoom-in for the currently viewed featured project image */
+        @keyframes kenBurnsZoom {
+          0%   { transform: scale(1); }
+          100% { transform: scale(1.15); }
+        }
+        .project-zoom {
+          animation: kenBurnsZoom 13s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .project-zoom { animation: none; }
+        }
       `}</style>
 
       <CustomCursor />
 
       {/* ── Fixed slideshow background ── */}
-      {/* FIX: Use 100dvh so iOS safari browser chrome doesn't cut the image */}
       <div className="fixed inset-0 -z-10 h-[100dvh] w-full">
         {slides.map((slide, i) => (
           <div
             key={i}
             className={`absolute inset-0 transition-opacity duration-[1500ms] ${active === i ? "opacity-100" : "opacity-0"}`}
           >
-            {/* FIX: object-position keeps subject centered on portrait mobile */}
             <Image
               src={slide.image}
               alt=""
               fill
               priority={i === 0}
               sizes="100vw"
-              unoptimized
+              unoptimized={process.env.NODE_ENV !== "production"}
               className="object-cover object-center"
               style={{ willChange: "opacity" }}
             />
@@ -195,7 +208,6 @@ export default function Home() {
       </div>
 
       {/* ── Social icons ── */}
-      {/* FIX: hidden on very small screens, shown from sm up; smaller touch targets on mobile */}
       <div className="fixed bottom-20 right-3 z-[60] flex flex-col items-center gap-2 sm:bottom-6 sm:right-6 sm:gap-3">
         {socials.map((s) => (
           <Link
@@ -289,34 +301,38 @@ export default function Home() {
       )}
 
       {/* ── Projects scroller ── */}
-      {/* FIX: h-[100dvh] accounts for mobile browser chrome so images don't get cut */}
       <section className="relative h-[100dvh] w-full overflow-hidden">
         <div
           ref={projectScrollerRef}
           onScroll={handleProjectScroll}
           className="flex h-full w-full snap-x snap-mandatory overflow-x-scroll [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         >
-          {projects.map((project) => (
-            <Link
-              key={project.slug}
-              href={`/projects/${project.slug}`}
-              data-cursor="view"
-              // FIX: w-[100vw] → w-screen is fine, but pair with flex-shrink-0 explicitly
-              className="relative flex h-full w-screen shrink-0 snap-start items-end"
-            >
-              {/* FIX: object-position: center keeps portrait images centered on narrow screens */}
-              <Image
-                src={project.image}
-                alt={project.title}
-                fill
-                sizes="100vw"
-                unoptimized
-                className="object-cover object-center"
-                style={{ willChange: "transform" }}
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/30" />
-            </Link>
-          ))}
+          {projects.map((project, i) => {
+            const isActive = i === projectIndex;
+            return (
+              <Link
+                key={project.slug}
+                href={`/projects/${project.slug}`}
+                data-cursor="view"
+                className="relative flex h-full w-screen shrink-0 snap-start items-end overflow-hidden"
+              >
+                <Image
+                  // Remounting only the active slide when zoomKey bumps
+                  // restarts its CSS animation, giving a fresh zoom-in
+                  // each time the viewer lands on that project.
+                  key={isActive ? `zoom-${zoomKey}` : `static-${i}`}
+                  src={project.image}
+                  alt={project.title}
+                  fill
+                  sizes="100vw"
+                  unoptimized={process.env.NODE_ENV !== "production"}
+                  className={`object-cover object-center ${isActive ? "project-zoom" : ""}`}
+                  style={{ willChange: "transform" }}
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/30" />
+              </Link>
+            );
+          })}
         </div>
 
         {/* Title */}
@@ -365,7 +381,6 @@ export default function Home() {
         </button>
 
         {/* Mobile dots + arrows */}
-        {/* FIX: bottom-6 gives breathing room above phone gesture bar */}
         <div className="pointer-events-none absolute bottom-6 left-1/2 z-20 flex -translate-x-1/2 items-center gap-3">
           <button
             onClick={() => goToProject(Math.max(projectIndex - 1, 0))}
