@@ -1,4 +1,4 @@
-// page.tsx — mobile-responsive fixes + featured projects zoom motion
+
 "use client";
 
 import { useEffect, useRef, useState } from "react";
@@ -34,7 +34,7 @@ const projects = [
   { slug: "m.l residence", title: "M.L Residence", image: "https://mtmyqbymrcgjnjyjyfgp.supabase.co/storage/v1/object/public/project-images/covers/1787171786491-v3ptlzjkfnd.png" },
   { slug: "mugutha residence", title: "Mugutha Residence", image: "https://mtmyqbymrcgjnjyjyfgp.supabase.co/storage/v1/object/public/project-images/covers/1787175311168-2kyywjpnvff.png" },
   { slug: "apex-residence", title: "Apex Residence", image: "https://mtmyqbymrcgjnjyjyfgp.supabase.co/storage/v1/object/public/project-images/covers/1787175773391-2rh5wox1i1k.jpg" },
-  { slug: "cn-residence", title: "CN Residence", image: "https://mtmyqbymrcgjnjyjyfgp.supabase.co/storage/v1/object/public/project-images/cover_50053a99-a552-452a-8bf9-f2ca7b509488.jpg" },
+  { slug: "cn-residence", title: "CN Residence", image: "https://mtmyqbymrcgjnjyjyfgp.supabase.co/storage/v1/object/public/project-images/covers/cover_50053a99-a552-452a-8bf9-f2ca7b509488.jpg" },
 ];
 
 const socials = [
@@ -99,16 +99,29 @@ function CustomCursor() {
   );
 }
 
+// Preload all project images as soon as the component mounts so
+// the browser has them cached before the user scrolls to them.
+// This eliminates the hang on L.B and Amani Residence.
+function usePreloadProjectImages() {
+  useEffect(() => {
+    projects.forEach((project) => {
+      const img = new window.Image();
+      img.src = project.image;
+    });
+  }, []);
+}
+
 export default function Home() {
   const [active, setActive] = useState(0);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [projectIndex, setProjectIndex] = useState(0);
   const [titleVisible, setTitleVisible] = useState(true);
-  // Bumped every time a new project becomes active so its Ken Burns
-  // zoom animation restarts (remount key trick below).
   const [zoomKey, setZoomKey] = useState(0);
   const projectScrollerRef = useRef<HTMLDivElement>(null);
   const titleTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Kick off preloading immediately on mount
+  usePreloadProjectImages();
 
   useEffect(() => {
     const t = setInterval(() => setActive((p) => (p + 1) % slides.length), SLIDE_DURATION);
@@ -317,13 +330,14 @@ export default function Home() {
                 className="relative flex h-full w-screen shrink-0 snap-start items-end overflow-hidden"
               >
                 <Image
-                  // Remounting only the active slide when zoomKey bumps
-                  // restarts its CSS animation, giving a fresh zoom-in
-                  // each time the viewer lands on that project.
+                  // priority={true} on all slides ensures the browser fetches
+                  // every project image eagerly on mount — no cold-fetch stutter
+                  // when scrolling to L.B or Amani Residence.
                   key={isActive ? `zoom-${zoomKey}` : `static-${i}`}
                   src={project.image}
                   alt={project.title}
                   fill
+                  priority={true}
                   sizes="100vw"
                   unoptimized={process.env.NODE_ENV !== "production"}
                   className={`object-cover object-center ${isActive ? "project-zoom" : ""}`}
