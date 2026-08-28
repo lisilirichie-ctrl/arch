@@ -26,8 +26,8 @@ const SLIDE_DURATION = 7000;
 const PROJECT_DURATION = 8000;
 
 const projects = [
-  { slug: "km-residence-tatu-city", title: "K.M Residence", image: "https://mtmyqbymrcgjnjyjyfgp.supabase.co/storage/v1/object/public/project-images/covers/1787913508255-gbneseu49of.webp" },
-  { slug: "lb-residence", title: "L.B Residence", image: "https://mtmyqbymrcgjnjyjyfgp.supabase.co/storage/v1/object/public/project-images/covers/1787171110460-p545yep2fxh.png" },
+  { slug: "km-residence-tatu-city", title: "K.M Residence", image: "https://mtmyqbymrcgjnjyjyfgp.supabase.co/storage/v1/object/public/project-images/covers/1787905838471-hlk59kxkyfd.webp" },
+  { slug: "lb-residence", title: "L.B Residence", image: "https://mtmyqbymrcgjnjyjyfgp.supabase.co/storage/v1/object/public/project-images/covers/1787906253182-m2axrc6bcel.webp" },
   { slug: "amani-residence", title: "Amani Residence", image: "https://mtmyqbymrcgjnjyjyfgp.supabase.co/storage/v1/object/public/project-images/covers/1787174436737-o1w27svfbyr.jpg" },
   { slug: "m.l residence", title: "M.L Residence", image: "https://mtmyqbymrcgjnjyjyfgp.supabase.co/storage/v1/object/public/project-images/covers/1787171786491-v3ptlzjkfnd.png" },
   { slug: "mugutha residence", title: "Mugutha Residence", image: "https://mtmyqbymrcgjnjyjyfgp.supabase.co/storage/v1/object/public/project-images/covers/1787175311168-2kyywjpnvff.png" },
@@ -210,18 +210,9 @@ export default function Home() {
         .project-zoom {
           animation: kenBurnsZoom 13s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
         }
-        /* Progress bar for auto-scroll timing */
-        @keyframes progressBar {
-          from { transform: scaleX(0); }
-          to   { transform: scaleX(1); }
-        }
-        .progress-bar {
-          transform-origin: left;
-          animation: progressBar ${PROJECT_DURATION}ms linear infinite;
-        }
+
         @media (prefers-reduced-motion: reduce) {
           .project-zoom { animation: none; }
-          .progress-bar { animation: none; }
         }
       `}</style>
 
@@ -384,14 +375,6 @@ export default function Home() {
               </Link>
             );
           })}
-        </div>
-
-        {/* Auto-scroll progress bar */}
-        <div className="pointer-events-none absolute bottom-0 left-0 z-20 h-[2px] w-full bg-white/10">
-          <div
-            key={projectIndex}
-            className="progress-bar h-full w-full bg-[#358CB8]/70"
-          />
         </div>
 
         {/* Title */}

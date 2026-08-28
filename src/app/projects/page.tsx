@@ -116,12 +116,12 @@ export default function Projects() {
 
   useEffect(() => {
     async function fetchProjects() {
-      const { data } = await supabase
-        .from("projects")
-        .select(
-          "id, slug, title, location, category, status, cover_image, description"
-        )
-        .order("created_at", { ascending: false });
+     const { data } = await supabase
+  .from("projects")
+  .select(
+    "id, slug, title, location, category, status, cover_image, description, position"
+  )
+  .order("position", { ascending: true, nullsFirst: false });
 
       if (data) setProjects(data);
       setLoading(false);
