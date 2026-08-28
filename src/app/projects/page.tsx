@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -20,7 +20,10 @@ type Project = {
   status: string;
   cover_image: string;
   description: string | null;
+  images: string[]; // all gallery images, cover first if no gallery
 };
+
+const CARD_ROTATE_INTERVAL = 6000; // 6 seconds
 
 /* ---------- Block reveal — card slides up from behind a clipping container ---------- */
 function Reveal({
@@ -108,6 +111,109 @@ function FadeReveal({
   );
 }
 
+/* ---------- Project card with auto-rotating crossfade gallery ---------- */
+function ProjectCard({
+  project,
+  delay,
+}: {
+  project: Project;
+  delay: number;
+}) {
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [isVisible, setIsVisible] = useState(false);
+  const cardRef = useRef<HTMLAnchorElement>(null);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const images = project.images.length > 0 ? project.images : [project.cover_image];
+
+  // Only run the rotation while the card is actually on screen — saves work
+  // for cards the user hasn't scrolled to yet.
+  useEffect(() => {
+    const el = cardRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => setIsVisible(entry.isIntersecting),
+      { threshold: 0.2 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (images.length <= 1 || !isVisible) {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+      return;
+    }
+
+    // Stagger the first tick per-card so cards don't all flip in unison
+    const startTimeout = setTimeout(() => {
+      intervalRef.current = setInterval(() => {
+        setActiveIndex((prev) => (prev + 1) % images.length);
+      }, CARD_ROTATE_INTERVAL);
+    }, delay);
+
+    return () => {
+      clearTimeout(startTimeout);
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, [images.length, isVisible, delay]);
+
+  return (
+    <Reveal delay={delay}>
+      <Link
+        ref={cardRef}
+        href={`/projects/${project.slug}`}
+        className="group relative block overflow-hidden rounded-sm bg-[#111418]"
+      >
+        {/* Image stack — crossfade between all gallery images */}
+        <div className="relative aspect-[4/3] overflow-hidden">
+          {images.map((src, i) => (
+            <Image
+              key={src + i}
+              src={src}
+              alt={project.title}
+              fill
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+              unoptimized={process.env.NODE_ENV !== "production"}
+              priority={i === 0}
+              className={`object-cover transition-[opacity,transform] duration-[1600ms] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.06] ${
+                i === activeIndex ? "opacity-100" : "opacity-0"
+              }`}
+            />
+          ))}
+        </div>
+
+        {/* Permanent bottom gradient so title is always readable */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent" />
+
+        {/* Title — hidden until hover, slides up from bottom */}
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 overflow-hidden px-5 pb-5">
+          <p className="translate-y-full text-sm font-light tracking-wide text-white transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:translate-y-0 md:text-base">
+            {project.title}
+          </p>
+        </div>
+
+        {/* Teal left-border accent that draws in on hover */}
+        <span className="absolute left-0 top-0 h-full w-[2px] origin-bottom scale-y-0 bg-[#358CB8] transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-y-100" />
+
+        {/* Dot indicators — only shown when there's more than one image */}
+        {images.length > 1 && (
+          <div className="pointer-events-none absolute right-3 top-3 flex gap-1">
+            {images.map((_, i) => (
+              <span
+                key={i}
+                className={`h-1 w-1 rounded-full transition-colors duration-500 ${
+                  i === activeIndex ? "bg-[#358CB8]" : "bg-white/30"
+                }`}
+              />
+            ))}
+          </div>
+        )}
+      </Link>
+    </Reveal>
+  );
+}
+
 export default function Projects() {
   const router = useRouter();
   const [projects, setProjects] = useState<Project[]>([]);
@@ -116,14 +222,32 @@ export default function Projects() {
 
   useEffect(() => {
     async function fetchProjects() {
-     const { data } = await supabase
-  .from("projects")
-  .select(
-    "id, slug, title, location, category, status, cover_image, description, position"
-  )
-  .order("position", { ascending: true, nullsFirst: false });
+      const { data } = await supabase
+        .from("projects")
+        .select(
+          `id, slug, title, location, category, status, cover_image, description, position,
+           project_images ( storage_path, sort_order )`
+        )
+        .order("position", { ascending: true, nullsFirst: false })
+        .order("sort_order", { foreignTable: "project_images", ascending: true });
 
-      if (data) setProjects(data);
+      if (data) {
+        const withImages: Project[] = data.map((p: any) => ({
+          id: p.id,
+          slug: p.slug,
+          title: p.title,
+          location: p.location,
+          category: p.category,
+          status: p.status,
+          cover_image: p.cover_image,
+          description: p.description,
+          images:
+            p.project_images && p.project_images.length > 0
+              ? p.project_images.map((img: any) => img.storage_path)
+              : [p.cover_image],
+        }));
+        setProjects(withImages);
+      }
       setLoading(false);
     }
     fetchProjects();
@@ -218,37 +342,7 @@ export default function Projects() {
         {!loading && filtered.length > 0 && (
           <div className="mx-auto grid max-w-[1600px] grid-cols-1 gap-3 px-6 sm:grid-cols-2 lg:grid-cols-3 lg:px-10">
             {filtered.map((project, i) => (
-              <Reveal key={project.id} delay={(i % 3) * 120}>
-                <Link
-                  href={`/projects/${project.slug}`}
-                  className="group relative block overflow-hidden rounded-sm bg-[#111418]"
-                >
-                  {/* Image */}
-                  <div className="relative aspect-[4/3] overflow-hidden">
-                    <Image
-                      src={project.cover_image}
-                      alt={project.title}
-                      fill
-                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                      unoptimized={process.env.NODE_ENV !== "production"}
-                      className="object-cover transition-transform duration-[1600ms] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.06]"
-                    />
-                  </div>
-
-                  {/* Permanent bottom gradient so title is always readable */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent" />
-
-                  {/* Title — hidden until hover, slides up from bottom */}
-                  <div className="pointer-events-none absolute inset-x-0 bottom-0 overflow-hidden px-5 pb-5">
-                    <p className="translate-y-full text-sm font-light tracking-wide text-white transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:translate-y-0 md:text-base">
-                      {project.title}
-                    </p>
-                  </div>
-
-                  {/* Teal left-border accent that draws in on hover */}
-                  <span className="absolute left-0 top-0 h-full w-[2px] origin-bottom scale-y-0 bg-[#358CB8] transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-y-100" />
-                </Link>
-              </Reveal>
+              <ProjectCard key={project.id} project={project} delay={(i % 3) * 120} />
             ))}
           </div>
         )}

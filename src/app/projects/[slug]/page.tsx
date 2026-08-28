@@ -42,62 +42,65 @@ export default function ProjectPage() {
 
   const galleryRef = useRef<HTMLDivElement>(null)
   const thumbRefs = useRef<(HTMLButtonElement | null)[]>([])
-useEffect(() => {
-  async function fetchProject() {
-    const rawSlug = Array.isArray(slug) ? slug[0] : slug;
-    const projectSlug = rawSlug ? decodeURIComponent(rawSlug) : "";
+  const autoScrollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const autoScrollPausedRef = useRef(false)
 
-    console.log("RAW SLUG:", rawSlug);
-    console.log("DECODED SLUG:", projectSlug);
+  useEffect(() => {
+    async function fetchProject() {
+      const rawSlug = Array.isArray(slug) ? slug[0] : slug;
+      const projectSlug = rawSlug ? decodeURIComponent(rawSlug) : "";
 
-    if (!projectSlug) {
-      console.error("No project slug found in URL");
+      console.log("RAW SLUG:", rawSlug);
+      console.log("DECODED SLUG:", projectSlug);
+
+      if (!projectSlug) {
+        console.error("No project slug found in URL");
+        setLoading(false);
+        return;
+      }
+
+      const { data: proj, error: projectError } = await supabase
+        .from("projects")
+        .select("*")
+        .eq("slug", projectSlug)
+        .maybeSingle();
+
+      console.log("PROJECT RESULT:", proj);
+      console.log("PROJECT ERROR:", projectError);
+
+      if (projectError) {
+        console.error("Failed to fetch project:", projectError);
+        setLoading(false);
+        return;
+      }
+
+      if (!proj) {
+        console.error("Project not found for slug:", projectSlug);
+        setLoading(false);
+        return;
+      }
+
+      setProject(proj);
+
+      const { data: imgs, error: imagesError } = await supabase
+        .from("project_images")
+        .select("*")
+        .eq("project_id", proj.id)
+        .order("sort_order");
+
+      if (imagesError) {
+        console.error("Images error:", imagesError);
+      }
+
+      if (imgs) {
+        setImages(imgs);
+      }
+
       setLoading(false);
-      return;
     }
 
-    const { data: proj, error: projectError } = await supabase
-      .from("projects")
-      .select("*")
-      .eq("slug", projectSlug)
-      .maybeSingle();
-
-    console.log("PROJECT RESULT:", proj);
-    console.log("PROJECT ERROR:", projectError);
-
-    if (projectError) {
-      console.error("Failed to fetch project:", projectError);
-      setLoading(false);
-      return;
-    }
-
-    if (!proj) {
-      console.error("Project not found for slug:", projectSlug);
-      setLoading(false);
-      return;
-    }
-
-    setProject(proj);
-
-    const { data: imgs, error: imagesError } = await supabase
-      .from("project_images")
-      .select("*")
-      .eq("project_id", proj.id)
-      .order("sort_order");
-
-    if (imagesError) {
-      console.error("Images error:", imagesError);
-    }
-
-    if (imgs) {
-      setImages(imgs);
-    }
-
-    setLoading(false);
-  }
-
-  fetchProject();
-}, [slug]);
+    fetchProject();
+  }, [slug]);
 
   const allImages = images.length > 0 ? images.map(i => i.storage_path) : project ? [project.cover_image] : []
 
@@ -109,6 +112,44 @@ useEffect(() => {
     card?.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" })
     setActiveIndex(clamped)
   }, [allImages.length])
+
+  // Called on manual navigation (arrows / thumbnails) — resumes auto-scroll if it was paused
+  const goToIndex = useCallback((index: number) => {
+    autoScrollPausedRef.current = false
+    scrollToIndex(index)
+  }, [scrollToIndex])
+
+  // Auto-scroll gallery every 8 seconds. Pauses once it loops back to the
+  // first image, and only resumes once the user manually navigates.
+  const startAutoScroll = useCallback(() => {
+    if (autoScrollIntervalRef.current) clearInterval(autoScrollIntervalRef.current)
+    if (allImages.length <= 1) return
+
+    autoScrollIntervalRef.current = setInterval(() => {
+      if (autoScrollPausedRef.current) return
+
+      setActiveIndex(prev => {
+        const next = prev + 1
+
+        if (next >= allImages.length) {
+          // Reached the end → loop back to first image, then pause
+          scrollToIndex(0)
+          autoScrollPausedRef.current = true
+          return 0
+        }
+
+        scrollToIndex(next)
+        return next
+      })
+    }, 8000)
+  }, [allImages.length, scrollToIndex])
+
+  useEffect(() => {
+    startAutoScroll()
+    return () => {
+      if (autoScrollIntervalRef.current) clearInterval(autoScrollIntervalRef.current)
+    }
+  }, [startAutoScroll])
 
   useEffect(() => {
     const el = galleryRef.current
@@ -218,7 +259,7 @@ useEffect(() => {
           {allImages.length > 1 && (
             <>
               <button
-                onClick={() => scrollToIndex(activeIndex - 1)}
+                onClick={() => goToIndex(activeIndex - 1)}
                 aria-label="Previous photo"
                 disabled={activeIndex === 0}
                 className="absolute left-4 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/10 bg-black/40 text-white backdrop-blur-md transition hover:bg-[#358CB8] disabled:opacity-30"
@@ -228,7 +269,7 @@ useEffect(() => {
                 </svg>
               </button>
               <button
-                onClick={() => scrollToIndex(activeIndex + 1)}
+                onClick={() => goToIndex(activeIndex + 1)}
                 aria-label="Next photo"
                 disabled={activeIndex === allImages.length - 1}
                 className="absolute right-4 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/10 bg-black/40 text-white backdrop-blur-md transition hover:bg-[#358CB8] disabled:opacity-30"
@@ -248,7 +289,7 @@ useEffect(() => {
                   <button
                     key={i}
                     ref={el => { thumbRefs.current[i] = el }}
-                    onClick={() => scrollToIndex(i)}
+                    onClick={() => goToIndex(i)}
                     className="group relative h-14 w-20 flex-shrink-0 overflow-hidden rounded-md"
                   >
                     <Image
