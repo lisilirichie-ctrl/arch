@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase";
 import { motion, AnimatePresence } from "framer-motion";
@@ -24,6 +24,41 @@ import {
 } from "lucide-react";
 
 const supabase = createClient();
+
+// ── Rate limiter for failed auth attempts (client-side hardening) ─────────────
+// Tracks login failures in sessionStorage so brute-force attempts from the same
+// tab are throttled. This is a UX-layer defence only; your Supabase Auth config
+// should also enable server-side rate limiting.
+const AUTH_ATTEMPT_KEY = "arch_auth_attempts";
+const MAX_AUTH_ATTEMPTS = 10;
+const AUTH_LOCKOUT_MS = 15 * 60 * 1000; // 15 minutes
+
+function getAuthAttempts(): { count: number; since: number } {
+  try {
+    const raw = sessionStorage.getItem(AUTH_ATTEMPT_KEY);
+    return raw ? JSON.parse(raw) : { count: 0, since: Date.now() };
+  } catch {
+    return { count: 0, since: Date.now() };
+  }
+}
+
+function recordAuthFailure() {
+  const current = getAuthAttempts();
+  const now = Date.now();
+  // Reset window if lockout period has passed
+  const since = now - current.since > AUTH_LOCKOUT_MS ? now : current.since;
+  sessionStorage.setItem(AUTH_ATTEMPT_KEY, JSON.stringify({ count: current.count + 1, since }));
+}
+
+function clearAuthAttempts() {
+  sessionStorage.removeItem(AUTH_ATTEMPT_KEY);
+}
+
+function isLockedOut(): boolean {
+  const { count, since } = getAuthAttempts();
+  if (Date.now() - since > AUTH_LOCKOUT_MS) return false; // window expired
+  return count >= MAX_AUTH_ATTEMPTS;
+}
 
 async function compressImage(file: File, maxDimension = 1600, quality = 0.8): Promise<File> {
   if (!file.type.startsWith("image/") || file.type === "image/gif") return file;
@@ -97,9 +132,7 @@ function slugify(text: string) {
   return text.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
 }
 
-/* ── Toast notification system ───────────────────────────────────────────────
-   Lightweight in-page error/success banners so failed actions (delete, toggle
-   status, load) are visible to the user instead of only landing in console. */
+/* ── Toast notification system ───────────────────────────────────────────────── */
 
 interface Toast {
   id: number;
@@ -160,7 +193,7 @@ function ToastStack({ toasts, onDismiss }: { toasts: Toast[]; onDismiss: (id: nu
   );
 }
 
-/* ── Themed confirm modal (replaces window.confirm) ──────────────────────── */
+/* ── Confirm modal ────────────────────────────────────────────────────────────── */
 
 function ConfirmDialog({
   open,
@@ -239,6 +272,62 @@ function ConfirmDialog({
   );
 }
 
+/* ── Session expiry warning modal ────────────────────────────────────────────── */
+// Shows 2 minutes before session expires so the admin can extend it.
+
+function SessionExpiryWarning({
+  open,
+  onExtend,
+  onLogout,
+}: {
+  open: boolean;
+  onExtend: () => void;
+  onLogout: () => void;
+}) {
+  return (
+    <AnimatePresence>
+      {open && (
+        <motion.div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+        >
+          <div className="absolute inset-0" style={{ backgroundColor: "rgba(0,0,0,0.7)" }} />
+          <motion.div
+            initial={{ opacity: 0, scale: 0.96 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.96 }}
+            className="relative w-full max-w-sm rounded-2xl p-6"
+            style={{ border: `1px solid rgba(212,165,55,0.3)`, backgroundColor: C.card }}
+          >
+            <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl"
+              style={{ backgroundColor: "rgba(212,165,55,0.12)" }}>
+              <AlertTriangle size={18} style={{ color: C.gold }} />
+            </div>
+            <h3 className="mb-1.5 text-base font-medium">Session expiring soon</h3>
+            <p className="mb-5 text-sm" style={{ color: C.textMuted }}>
+              Your session will expire in 2 minutes. Stay logged in?
+            </p>
+            <div className="flex flex-col-reverse gap-2.5 sm:flex-row sm:justify-end">
+              <button type="button" onClick={onLogout}
+                className="w-full rounded-lg px-4 py-2.5 text-sm font-medium transition-colors sm:w-auto"
+                style={{ border: `1px solid ${C.border}`, color: C.textMuted }}>
+                Log out
+              </button>
+              <button type="button" onClick={onExtend}
+                className="flex w-full items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold sm:w-auto"
+                style={{ background: goldGradient, color: "#191305" }}>
+                Stay logged in
+              </button>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+}
+
 export default function AdminDashboardPage() {
   const router = useRouter();
   const [view, setView] = useState<"dashboard" | "projects" | "add" | "edit">("dashboard");
@@ -246,36 +335,140 @@ export default function AdminDashboardPage() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
-  const [checkingAuth, setCheckingAuth] = useState(true);
+  // ── SECURITY: three-state auth gate ──────────────────────────────────────────
+  // "checking"  → waiting for Supabase to confirm session (show spinner, render nothing)
+  // "forbidden" → session absent or user not in admin_users (redirect, render nothing)
+  // "granted"   → verified admin; render the dashboard
+  const [authState, setAuthState] = useState<"checking" | "forbidden" | "granted">("checking");
 
-  // Per-row async state so a single card shows its own spinner instead of blocking the page
   const [togglingId, setTogglingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [pendingDelete, setPendingDelete] = useState<Project | null>(null);
 
+  // Session expiry warning state
+  const [showExpiryWarning, setShowExpiryWarning] = useState(false);
+  const expiryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const { toasts, push: pushToast, dismiss: dismissToast } = useToasts();
 
+  // ── Core auth verification (also called on session refresh) ──────────────────
+  const verifyAdminAccess = useCallback(async (): Promise<boolean> => {
+    // Bail early if this tab has been locked out (client-side rate limit)
+    if (isLockedOut()) {
+      return false;
+    }
+
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+
+    if (sessionError || !session) {
+      recordAuthFailure();
+      return false;
+    }
+
+    // Double-check the JWT hasn't expired (getSession can return a cached value)
+    const now = Math.floor(Date.now() / 1000);
+    if (session.expires_at && session.expires_at < now) {
+      recordAuthFailure();
+      return false;
+    }
+
+    // Server-side row-level check: user must exist in admin_users table.
+    // This mirrors an RLS policy — the dashboard never trusts the JWT alone.
+    const { data: adminRow, error: adminError } = await supabase
+      .from("admin_users")
+      .select("user_id")
+      .eq("user_id", session.user.id)
+      .maybeSingle();
+
+    if (adminError || !adminRow) {
+      recordAuthFailure();
+      return false;
+    }
+
+    // Successful verification — reset the failure counter
+    clearAuthAttempts();
+    return true;
+  }, []);
+
+  // ── Schedule a session-expiry warning 2 min before the token expires ─────────
+  const scheduleExpiryWarning = useCallback(async () => {
+    if (expiryTimerRef.current) clearTimeout(expiryTimerRef.current);
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.expires_at) return;
+
+    const msUntilExpiry = session.expires_at * 1000 - Date.now();
+    const warnAt = msUntilExpiry - 2 * 60 * 1000; // 2 min before
+
+    if (warnAt > 0) {
+      expiryTimerRef.current = setTimeout(() => setShowExpiryWarning(true), warnAt);
+    }
+  }, []);
+
+  // ── Extend session (refresh token) ───────────────────────────────────────────
+  const handleExtendSession = useCallback(async () => {
+    setShowExpiryWarning(false);
+    const { error } = await supabase.auth.refreshSession();
+    if (error) {
+      // Refresh failed — send to login
+      router.replace("/admin/login");
+      return;
+    }
+    scheduleExpiryWarning();
+    pushToast("success", "Session extended.");
+  }, [router, scheduleExpiryWarning, pushToast]);
+
+  // ── Initial auth check + real-time auth state listener ───────────────────────
   useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) { router.replace("/admin/login"); return; }
+    let mounted = true;
 
-      // Session alone isn't enough — confirm this user is actually listed
-      // in admin_users before granting access to the dashboard.
-      const { data: adminRow } = await supabase
-        .from("admin_users")
-        .select("user_id")
-        .eq("user_id", session.user.id)
-        .maybeSingle();
+    const init = async () => {
+      const granted = await verifyAdminAccess();
+      if (!mounted) return;
 
-      if (!adminRow) {
+      if (!granted) {
+        setAuthState("forbidden");
         router.replace("/admin/login");
         return;
       }
-      setCheckingAuth(false);
+
+      setAuthState("granted");
+      scheduleExpiryWarning();
     };
-    checkAuth();
-  }, [router]);
+
+    init();
+
+    // ── Listen for auth events from ANY tab ───────────────────────────────────
+    // SIGNED_OUT from another tab immediately invalidates this dashboard.
+    // TOKEN_REFRESHED keeps the expiry timer accurate.
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (!mounted) return;
+
+      if (event === "SIGNED_OUT" || !session) {
+        setAuthState("forbidden");
+        router.replace("/admin/login");
+        return;
+      }
+
+      if (event === "TOKEN_REFRESHED") {
+        // Re-verify admin row in case it was revoked
+        const stillAdmin = await verifyAdminAccess();
+        if (!mounted) return;
+
+        if (!stillAdmin) {
+          setAuthState("forbidden");
+          router.replace("/admin/login");
+          return;
+        }
+        scheduleExpiryWarning();
+      }
+    });
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+      if (expiryTimerRef.current) clearTimeout(expiryTimerRef.current);
+    };
+  }, [router, verifyAdminAccess, scheduleExpiryWarning]);
 
   const loadProjects = async () => {
     setLoading(true);
@@ -336,11 +529,16 @@ export default function AdminDashboardPage() {
   };
 
   const handleLogout = async () => {
+    if (expiryTimerRef.current) clearTimeout(expiryTimerRef.current);
+    clearAuthAttempts();
     await supabase.auth.signOut();
     router.push("/admin/login");
   };
 
-  useEffect(() => { if (!checkingAuth) loadProjects(); }, [checkingAuth]);
+  // ── Load projects only once auth is confirmed ─────────────────────────────────
+  useEffect(() => {
+    if (authState === "granted") loadProjects();
+  }, [authState]);
 
   const now = new Date();
   const greeting = getGreeting(now.getHours());
@@ -364,7 +562,9 @@ export default function AdminDashboardPage() {
     goTo("edit");
   }
 
-  if (checkingAuth) {
+  // ── Hard gate: render NOTHING until auth is confirmed ────────────────────────
+  // This prevents any flash of admin UI to unauthenticated users.
+  if (authState === "checking" || authState === "forbidden") {
     return (
       <div className="flex min-h-screen items-center justify-center" style={{ backgroundColor: C.bg }}>
         <Loader2 className="animate-spin" style={{ color: C.gold }} size={28} />
@@ -375,6 +575,12 @@ export default function AdminDashboardPage() {
   return (
     <div className="flex min-h-screen w-full" style={{ backgroundColor: C.bg, color: C.text }}>
       <ToastStack toasts={toasts} onDismiss={dismissToast} />
+
+      <SessionExpiryWarning
+        open={showExpiryWarning}
+        onExtend={handleExtendSession}
+        onLogout={handleLogout}
+      />
 
       <ConfirmDialog
         open={!!pendingDelete}
@@ -713,27 +919,12 @@ function Field({ label, placeholder, value, onChange, type = "text" }: {
 /* ── Draggable gallery thumbnail ─────────────────────────────────────────────── */
 
 function DraggableThumb({
-  src,
-  isNew,
-  onRemove,
-  index,
-  onDragStart,
-  onDragOver,
-  onDrop,
-  onDragEnd,
-  isDragging,
-  isOver,
+  src, isNew, onRemove, index, onDragStart, onDragOver, onDrop, onDragEnd, isDragging, isOver,
 }: {
-  src: string;
-  isNew?: boolean;
-  onRemove: () => void;
-  index: number;
-  onDragStart: (i: number) => void;
-  onDragOver: (i: number) => void;
-  onDrop: (i: number) => void;
-  onDragEnd: () => void;
-  isDragging: boolean;
-  isOver: boolean;
+  src: string; isNew?: boolean; onRemove: () => void; index: number;
+  onDragStart: (i: number) => void; onDragOver: (i: number) => void;
+  onDrop: (i: number) => void; onDragEnd: () => void;
+  isDragging: boolean; isOver: boolean;
 }) {
   return (
     <div
@@ -753,29 +944,18 @@ function DraggableThumb({
       }}
     >
       <img src={src} alt="" className="h-full w-full object-cover pointer-events-none" />
-
-      {/* Drag hint */}
-      <div
-        className="absolute left-1.5 top-1.5 rounded px-1.5 py-0.5 opacity-0 transition-opacity group-hover:opacity-100 pointer-events-none"
-        style={{ backgroundColor: "rgba(0,0,0,0.72)", color: "#fff", fontSize: 9, letterSpacing: "0.04em" }}
-      >
+      <div className="absolute left-1.5 top-1.5 rounded px-1.5 py-0.5 opacity-0 transition-opacity group-hover:opacity-100 pointer-events-none"
+        style={{ backgroundColor: "rgba(0,0,0,0.72)", color: "#fff", fontSize: 9, letterSpacing: "0.04em" }}>
         ⠿ drag
       </div>
-
-      {/* NEW badge */}
       {isNew && (
         <span className="absolute right-1.5 top-1.5 rounded bg-blue-500 px-1.5 py-0.5 text-[9px] font-bold text-white pointer-events-none">
           NEW
         </span>
       )}
-
-      {/* Remove overlay */}
-      <button
-        type="button"
-        onClick={(e) => { e.stopPropagation(); onRemove(); }}
+      <button type="button" onClick={(e) => { e.stopPropagation(); onRemove(); }}
         className="absolute inset-0 flex items-center justify-center bg-black/55 opacity-0 transition-opacity group-hover:opacity-100"
-        title="Remove"
-      >
+        title="Remove">
         <X size={16} color="#fff" />
       </button>
     </div>
@@ -819,12 +999,9 @@ function ProjectForm({ mode, existingProject, onCancel, onSaved }: {
   );
 
   const [galleryDropActive, setGalleryDropActive] = useState(false);
-
-  // Only track which index is being dragged and which is being hovered
   const dragIndexRef = useRef<number | null>(null);
   const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
   const [overIndex, setOverIndex] = useState<number | null>(null);
-
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -849,40 +1026,16 @@ function ProjectForm({ mode, existingProject, onCancel, onSaved }: {
     setGallery((prev) => [...prev, ...items]);
   };
 
-  // ── Drag start ──────────────────────────────────────────────────────────────
-  const onThumbDragStart = (index: number) => {
-    dragIndexRef.current = index;
-    setDraggingIndex(index);
-    setOverIndex(null);
-  };
-
-  // ── Hover tracking (visual feedback while dragging over another thumbnail) ──
-  const onThumbDragOver = (index: number) => {
-    if (dragIndexRef.current === null || dragIndexRef.current === index) return;
-    setOverIndex(index);
-  };
-
-  // ── Drop: swap the two items ────────────────────────────────────────────────
+  const onThumbDragStart = (index: number) => { dragIndexRef.current = index; setDraggingIndex(index); setOverIndex(null); };
+  const onThumbDragOver = (index: number) => { if (dragIndexRef.current === null || dragIndexRef.current === index) return; setOverIndex(index); };
   const onThumbDrop = (index: number) => {
     const from = dragIndexRef.current;
     if (from === null || from === index) return;
-    setGallery((prev) => {
-      const next = [...prev];
-      // Simple swap — the dragged item and the target item switch positions
-      [next[from], next[index]] = [next[index], next[from]];
-      return next;
-    });
+    setGallery((prev) => { const next = [...prev]; [next[from], next[index]] = [next[index], next[from]]; return next; });
     setOverIndex(null);
   };
+  const onThumbDragEnd = () => { dragIndexRef.current = null; setDraggingIndex(null); setOverIndex(null); };
 
-  // ── Drag end: clear all visual state ───────────────────────────────────────
-  const onThumbDragEnd = () => {
-    dragIndexRef.current = null;
-    setDraggingIndex(null);
-    setOverIndex(null);
-  };
-
-  // ── Cover drop zone ─────────────────────────────────────────────────────────
   const onCoverDragOver = (e: React.DragEvent) => { e.preventDefault(); setCoverDragging(true); };
   const onCoverDragLeave = () => setCoverDragging(false);
   const onCoverDrop = async (e: React.DragEvent) => {
@@ -891,7 +1044,6 @@ function ProjectForm({ mode, existingProject, onCancel, onSaved }: {
     if (file?.type.startsWith("image/")) await handleCoverSelect(file);
   };
 
-  // ── Gallery add drop zone ───────────────────────────────────────────────────
   const onGalleryAddDragOver = (e: React.DragEvent) => { e.preventDefault(); setGalleryDropActive(true); };
   const onGalleryAddDragLeave = () => setGalleryDropActive(false);
   const onGalleryAddDrop = async (e: React.DragEvent) => {
@@ -900,7 +1052,6 @@ function ProjectForm({ mode, existingProject, onCancel, onSaved }: {
     await handleGalleryAdd(files);
   };
 
-  // ── Upload helper ───────────────────────────────────────────────────────────
   const uploadFile = async (file: File, folder: string) => {
     const compressed = await compressImage(file);
     const ext = compressed.name.split(".").pop();
@@ -913,20 +1064,15 @@ function ProjectForm({ mode, existingProject, onCancel, onSaved }: {
     return data.publicUrl;
   };
 
-  // ── Remove ──────────────────────────────────────────────────────────────────
   const removeGalleryItem = async (index: number) => {
     const item = gallery[index];
     if (item.kind === "existing" && item.img.id) {
       const { error } = await supabase.from("project_images").delete().eq("id", item.img.id);
-      if (error) {
-        setError("Couldn't remove that photo. Try again.");
-        return;
-      }
+      if (error) { setError("Couldn't remove that photo. Try again."); return; }
     }
     setGallery((prev) => prev.filter((_, i) => i !== index));
   };
 
-  // ── Submit ──────────────────────────────────────────────────────────────────
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!title.trim() || !location.trim()) { setError("Jaza Title na Location kabla ya kusave."); return; }
@@ -935,6 +1081,12 @@ function ProjectForm({ mode, existingProject, onCancel, onSaved }: {
     setSaving(true);
 
     try {
+      // ── Re-verify the session is still valid before any write operation ───────
+      // This prevents a scenario where the session expired while the form was open
+      // and the admin still submits, causing orphaned or unauthorised data writes.
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("Your session has expired. Please log in again.");
+
       let coverUrl = coverPreview;
       if (coverFile) coverUrl = await uploadFile(coverFile, "covers");
 
@@ -963,7 +1115,6 @@ function ProjectForm({ mode, existingProject, onCancel, onSaved }: {
         if (updateError) throw updateError;
       }
 
-      // Persist gallery in current visual order (swap-aware)
       if (projectId) {
         for (let i = 0; i < gallery.length; i++) {
           const item = gallery[i];
@@ -1055,7 +1206,7 @@ function ProjectForm({ mode, existingProject, onCancel, onSaved }: {
           onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) handleCoverSelect(f); }} />
       </div>
 
-      {/* Gallery with swap-on-drop reordering */}
+      {/* Gallery */}
       <div className="mb-4">
         <div className="mb-2 flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -1072,7 +1223,6 @@ function ProjectForm({ mode, existingProject, onCancel, onSaved }: {
           )}
         </div>
 
-        {/* Reorderable thumbnail grid */}
         {gallery.length > 0 && (
           <div className="mb-3 grid grid-cols-3 gap-2 sm:grid-cols-4">
             {gallery.map((item, i) => (
@@ -1093,7 +1243,6 @@ function ProjectForm({ mode, existingProject, onCancel, onSaved }: {
           </div>
         )}
 
-        {/* Add more images drop zone */}
         <div
           onDragOver={onGalleryAddDragOver} onDragLeave={onGalleryAddDragLeave} onDrop={onGalleryAddDrop}
           onClick={() => galleryInputRef.current?.click()}
