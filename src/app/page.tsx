@@ -27,7 +27,7 @@ const SLIDE_DURATION = 7000;
 
 const projects = [
   // ── moved from last 3
-  { slug: "km-residence-tatu-city", title: "K.M Residence", image: "https://mtmyqbymrcgjnjyjyfgp.supabase.co/storage/v1/object/public/project-images/covers/1787910671207-ffs28zt2gjm.webp" },
+  { slug: "km-residence-tatu-city", title: "K.M Residence", image: "https://mtmyqbymrcgjnjyjyfgp.supabase.co/storage/v1/object/public/project-images/covers/1787905838471-hlk59kxkyfd.webp" },
   { slug: "lb-residence", title: "L.B Residence", image: "https://mtmyqbymrcgjnjyjyfgp.supabase.co/storage/v1/object/public/project-images/covers/1787171110460-p545yep2fxh.png" },
   { slug: "amani-residence", title: "Amani Residence", image: "https://mtmyqbymrcgjnjyjyfgp.supabase.co/storage/v1/object/public/project-images/covers/1787174436737-o1w27svfbyr.jpg" },
   // ── original order ──
