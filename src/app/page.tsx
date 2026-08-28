@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useEffect, useRef, useState } from "react";
@@ -24,17 +23,15 @@ const slides = [
 ];
 
 const SLIDE_DURATION = 7000;
+const PROJECT_DURATION = 8000;
 
 const projects = [
-  // ── moved from last 3
-  { slug: "km-residence-tatu-city", title: "K.M Residence", image: "https://mtmyqbymrcgjnjyjyfgp.supabase.co/storage/v1/object/public/project-images/covers/1787905838471-hlk59kxkyfd.webp" },
+  { slug: "km-residence-tatu-city", title: "K.M Residence", image: "https://mtmyqbymrcgjnjyjyfgp.supabase.co/storage/v1/object/public/project-images/covers/1787913508255-gbneseu49of.webp" },
   { slug: "lb-residence", title: "L.B Residence", image: "https://mtmyqbymrcgjnjyjyfgp.supabase.co/storage/v1/object/public/project-images/covers/1787171110460-p545yep2fxh.png" },
   { slug: "amani-residence", title: "Amani Residence", image: "https://mtmyqbymrcgjnjyjyfgp.supabase.co/storage/v1/object/public/project-images/covers/1787174436737-o1w27svfbyr.jpg" },
-  // ── original order ──
   { slug: "m.l residence", title: "M.L Residence", image: "https://mtmyqbymrcgjnjyjyfgp.supabase.co/storage/v1/object/public/project-images/covers/1787171786491-v3ptlzjkfnd.png" },
   { slug: "mugutha residence", title: "Mugutha Residence", image: "https://mtmyqbymrcgjnjyjyfgp.supabase.co/storage/v1/object/public/project-images/covers/1787175311168-2kyywjpnvff.png" },
   { slug: "apex-residence", title: "Apex Residence", image: "https://mtmyqbymrcgjnjyjyfgp.supabase.co/storage/v1/object/public/project-images/covers/1787909055534-8qqfzss5q48.webp" },
-  
 ];
 
 const socials = [
@@ -99,9 +96,6 @@ function CustomCursor() {
   );
 }
 
-// Preload all project images as soon as the component mounts so
-// the browser has them cached before the user scrolls to them.
-// This eliminates the hang on L.B and Amani Residence.
 function usePreloadProjectImages() {
   useEffect(() => {
     projects.forEach((project) => {
@@ -119,13 +113,35 @@ export default function Home() {
   const [zoomKey, setZoomKey] = useState(0);
   const projectScrollerRef = useRef<HTMLDivElement>(null);
   const titleTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Track whether user is manually interacting so we can pause auto-scroll briefly
+  const userInteractingRef = useRef(false);
+  const interactionTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Kick off preloading immediately on mount
   usePreloadProjectImages();
 
+  // Hero slideshow
   useEffect(() => {
     const t = setInterval(() => setActive((p) => (p + 1) % slides.length), SLIDE_DURATION);
     return () => clearInterval(t);
+  }, []);
+
+  // ── Auto-scroll featured projects ──
+  useEffect(() => {
+    const interval = setInterval(() => {
+      // Pause auto-scroll if user is actively interacting
+      if (userInteractingRef.current) return;
+
+      const el = projectScrollerRef.current;
+      if (!el) return;
+
+      setProjectIndex((prev) => {
+        const next = (prev + 1) % projects.length;
+        el.scrollTo({ left: next * el.clientWidth, behavior: "smooth" });
+        return next;
+      });
+    }, PROJECT_DURATION);
+
+    return () => clearInterval(interval);
   }, []);
 
   const handleProjectScroll = () => {
@@ -144,6 +160,13 @@ export default function Home() {
   };
 
   const goToProject = (index: number) => {
+    // Mark user as interacting — pause auto-scroll for 8s after manual nav
+    userInteractingRef.current = true;
+    if (interactionTimeoutRef.current) clearTimeout(interactionTimeoutRef.current);
+    interactionTimeoutRef.current = setTimeout(() => {
+      userInteractingRef.current = false;
+    }, 8000);
+
     const el = projectScrollerRef.current;
     if (!el) return;
     el.scrollTo({ left: index * el.clientWidth, behavior: "smooth" });
@@ -179,10 +202,7 @@ export default function Home() {
           border: 1.5px solid #358CB8;
           animation: pulseRing 2s ease-out infinite;
         }
-        /* FIX: Prevent iOS rubber-band scroll from revealing white gaps */
         html, body { overscroll-behavior: none; }
-
-        /* Ken Burns zoom-in for the currently viewed featured project image */
         @keyframes kenBurnsZoom {
           0%   { transform: scale(1); }
           100% { transform: scale(1.15); }
@@ -190,8 +210,18 @@ export default function Home() {
         .project-zoom {
           animation: kenBurnsZoom 13s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
         }
+        /* Progress bar for auto-scroll timing */
+        @keyframes progressBar {
+          from { transform: scaleX(0); }
+          to   { transform: scaleX(1); }
+        }
+        .progress-bar {
+          transform-origin: left;
+          animation: progressBar ${PROJECT_DURATION}ms linear infinite;
+        }
         @media (prefers-reduced-motion: reduce) {
           .project-zoom { animation: none; }
+          .progress-bar { animation: none; }
         }
       `}</style>
 
@@ -318,6 +348,16 @@ export default function Home() {
         <div
           ref={projectScrollerRef}
           onScroll={handleProjectScroll}
+          // Pause auto-scroll on touch start, resume after touch ends
+          onTouchStart={() => {
+            userInteractingRef.current = true;
+            if (interactionTimeoutRef.current) clearTimeout(interactionTimeoutRef.current);
+          }}
+          onTouchEnd={() => {
+            interactionTimeoutRef.current = setTimeout(() => {
+              userInteractingRef.current = false;
+            }, 8000);
+          }}
           className="flex h-full w-full snap-x snap-mandatory overflow-x-scroll [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         >
           {projects.map((project, i) => {
@@ -330,9 +370,6 @@ export default function Home() {
                 className="relative flex h-full w-screen shrink-0 snap-start items-end overflow-hidden"
               >
                 <Image
-                  // priority={true} on all slides ensures the browser fetches
-                  // every project image eagerly on mount — no cold-fetch stutter
-                  // when scrolling to L.B or Amani Residence.
                   key={isActive ? `zoom-${zoomKey}` : `static-${i}`}
                   src={project.image}
                   alt={project.title}
@@ -347,6 +384,14 @@ export default function Home() {
               </Link>
             );
           })}
+        </div>
+
+        {/* Auto-scroll progress bar */}
+        <div className="pointer-events-none absolute bottom-0 left-0 z-20 h-[2px] w-full bg-white/10">
+          <div
+            key={projectIndex}
+            className="progress-bar h-full w-full bg-[#358CB8]/70"
+          />
         </div>
 
         {/* Title */}
