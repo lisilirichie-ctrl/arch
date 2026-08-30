@@ -1,4 +1,3 @@
-
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
@@ -129,8 +128,12 @@ export default function RootLayout({
 
       <body className="min-h-full flex flex-col">
         {children}
+
+        {/* Copyright badge — fixed, kila page */}
+        <div className="fixed bottom-0 right-0 z-50 px-3 py-1.5 bg-black/50 backdrop-blur-sm text-white/40 text-[10px] tracking-wide rounded-tl-md select-none pointer-events-none">
+          © {new Date().getFullYear()} Archstruc Group Limited
+        </div>
       </body>
     </html>
   );
 }
-
