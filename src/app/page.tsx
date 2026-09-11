@@ -4,25 +4,6 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 
-const slides = [
-  {
-    image: "https://archstrucgroup.co.ke/archstruc_admin/uploads/1750828417_IMG_4292.JPG",
-    title: "Building Kenya's Future.",
-    subtitle: "Delivering world class engineering, architecture and construction solutions across East Africa.",
-  },
-  {
-    image: "https://archstrucgroup.co.ke/archstruc_admin/uploads/1746876863_63.5.jpg",
-    title: "Designed For Generations.",
-    subtitle: "Creating spaces that combine innovation, precision and lasting value.",
-  },
-  {
-    image: "https://archstrucgroup.co.ke/archstruc_admin/uploads/683193499f5d6_17q copy (1).jpg",
-    title: "Engineering Tomorrow.",
-    subtitle: "From concept to completion, we build with excellence.",
-  },
-];
-
-const SLIDE_DURATION = 7000;
 const PROJECT_DURATION = 8000;
 
 const projects = [
@@ -57,11 +38,25 @@ const socials = [
   },
 ];
 
-function CustomCursor() {
+/** Detects touch/coarse-pointer devices so we can skip cursor & hover-only behavior on mobile. */
+function useIsTouchDevice() {
+  const [isTouch, setIsTouch] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(hover: none), (pointer: coarse)");
+    setIsTouch(mq.matches);
+    const listener = (e: MediaQueryListEvent) => setIsTouch(e.matches);
+    mq.addEventListener("change", listener);
+    return () => mq.removeEventListener("change", listener);
+  }, []);
+  return isTouch;
+}
+
+function CustomCursor({ disabled }: { disabled: boolean }) {
   const cursorRef = useRef<HTMLDivElement>(null);
   const [hovering, setHovering] = useState(false);
 
   useEffect(() => {
+    if (disabled) return;
     const move = (e: MouseEvent) => {
       if (cursorRef.current) {
         cursorRef.current.style.transform = `translate(${e.clientX - 40}px, ${e.clientY - 40}px)`;
@@ -84,12 +79,14 @@ function CustomCursor() {
         el.removeEventListener("mouseleave", off);
       });
     };
-  }, []);
+  }, [disabled]);
+
+  if (disabled) return null;
 
   return (
     <div
       ref={cursorRef}
-      className={`pointer-events-none fixed top-0 left-0 z-[999] flex h-20 w-20 items-center justify-center rounded-full border border-white/40 backdrop-blur-sm transition-[opacity,transform] duration-200 ${hovering ? "scale-100 opacity-100 bg-[#358CB8]/20" : "scale-0 opacity-0"}`}
+      className={`pointer-events-none fixed top-0 left-0 z-[999] hidden h-20 w-20 items-center justify-center rounded-full border border-white/40 backdrop-blur-sm transition-[opacity,transform] duration-200 md:flex ${hovering ? "scale-100 opacity-100 bg-[#358CB8]/20" : "scale-0 opacity-0"}`}
     >
       <span className="text-[10px] font-medium uppercase tracking-[0.3em] text-white">View</span>
     </div>
@@ -106,41 +103,30 @@ function usePreloadProjectImages() {
 }
 
 export default function Home() {
-  const [active, setActive] = useState(0);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [projectIndex, setProjectIndex] = useState(0);
   const [titleVisible, setTitleVisible] = useState(true);
   const [zoomKey, setZoomKey] = useState(0);
   const projectScrollerRef = useRef<HTMLDivElement>(null);
   const titleTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  // Track whether user is manually interacting so we can pause auto-scroll briefly
   const userInteractingRef = useRef(false);
   const interactionTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isTouch = useIsTouchDevice();
 
   usePreloadProjectImages();
 
-  // Hero slideshow
-  useEffect(() => {
-    const t = setInterval(() => setActive((p) => (p + 1) % slides.length), SLIDE_DURATION);
-    return () => clearInterval(t);
-  }, []);
-
-  // ── Auto-scroll featured projects ──
+  // Auto-scroll featured projects
   useEffect(() => {
     const interval = setInterval(() => {
-      // Pause auto-scroll if user is actively interacting
       if (userInteractingRef.current) return;
-
       const el = projectScrollerRef.current;
       if (!el) return;
-
       setProjectIndex((prev) => {
         const next = (prev + 1) % projects.length;
         el.scrollTo({ left: next * el.clientWidth, behavior: "smooth" });
         return next;
       });
     }, PROJECT_DURATION);
-
     return () => clearInterval(interval);
   }, []);
 
@@ -160,20 +146,18 @@ export default function Home() {
   };
 
   const goToProject = (index: number) => {
-    // Mark user as interacting — pause auto-scroll for 8s after manual nav
     userInteractingRef.current = true;
     if (interactionTimeoutRef.current) clearTimeout(interactionTimeoutRef.current);
     interactionTimeoutRef.current = setTimeout(() => {
       userInteractingRef.current = false;
     }, 8000);
-
     const el = projectScrollerRef.current;
     if (!el) return;
     el.scrollTo({ left: index * el.clientWidth, behavior: "smooth" });
   };
 
   return (
-    <main className="relative min-h-[100dvh] text-white">
+    <main className="relative h-[100dvh] w-full overflow-hidden text-white">
       <style>{`
         @keyframes slideUp {
           from { opacity: 0; transform: translateY(12px); }
@@ -210,39 +194,19 @@ export default function Home() {
         .project-zoom {
           animation: kenBurnsZoom 13s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
         }
-
         @media (prefers-reduced-motion: reduce) {
           .project-zoom { animation: none; }
         }
+        /* iOS safe-area helpers for fixed bottom UI */
+        .safe-bottom {
+          padding-bottom: env(safe-area-inset-bottom, 0px);
+        }
       `}</style>
 
-      <CustomCursor />
+      <CustomCursor disabled={isTouch} />
 
-      {/* ── Fixed slideshow background ── */}
-      <div className="fixed inset-0 -z-10 h-[100dvh] w-full">
-        {slides.map((slide, i) => (
-          <div
-            key={i}
-            className={`absolute inset-0 transition-opacity duration-[1500ms] ${active === i ? "opacity-100" : "opacity-0"}`}
-          >
-            <Image
-              src={slide.image}
-              alt=""
-              fill
-              priority={i === 0}
-              sizes="100vw"
-              unoptimized={process.env.NODE_ENV !== "production"}
-              className="object-cover object-center"
-              style={{ willChange: "opacity" }}
-            />
-          </div>
-        ))}
-        <div className="absolute inset-0 bg-black/60" />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/50" />
-      </div>
-
-      {/* ── Social icons ── */}
-      <div className="fixed bottom-20 right-3 z-[60] flex flex-col items-center gap-2 sm:bottom-6 sm:right-6 sm:gap-3">
+      {/* ── Social icons — always vertical, docked to the right side (both mobile & desktop) ── */}
+      <div className="fixed bottom-24 right-3 z-[60] flex flex-col items-center gap-2 sm:bottom-6 sm:right-6 sm:gap-3">
         {socials.map((s) => (
           <Link
             key={s.label}
@@ -250,7 +214,7 @@ export default function Home() {
             target="_blank"
             rel="noopener noreferrer"
             aria-label={s.label}
-            className="flex h-7 w-7 items-center justify-center rounded-full transition hover:scale-110 sm:h-8 sm:w-8"
+            className="flex h-8 w-8 items-center justify-center rounded-full transition active:scale-95 hover:scale-110 sm:h-9 sm:w-9"
             style={{ background: s.color }}
           >
             {s.icon}
@@ -258,26 +222,29 @@ export default function Home() {
         ))}
       </div>
 
-      {/* ── Navbar ── */}
+      {/* ── Navbar — true glassmorphism ── */}
       <nav
-        className="liquid-glass fixed top-0 left-0 z-50 w-full border-b border-white/10 backdrop-blur-md"
-        style={{ background: "linear-gradient(180deg, rgba(8,15,20,0.55) 0%, rgba(8,15,20,0.25) 100%)" }}
+        className="fixed top-0 left-0 z-50 w-full border-b border-white/15 backdrop-blur-xl backdrop-saturate-150"
+        style={{
+          background: "linear-gradient(180deg, rgba(15,25,32,0.45) 0%, rgba(15,25,32,0.15) 100%)",
+          boxShadow: "inset 0 1px 0 0 rgba(255,255,255,0.12)",
+        }}
       >
         <div className="flex h-16 w-full items-center justify-between px-4 sm:h-20 sm:px-6 lg:px-10">
-          <Link href="/" className="flex items-center gap-2 sm:gap-3" onClick={() => setMobileOpen(false)}>
-            <img src="/archstruc-icon.png" alt="Archstruc Group" className="h-9 w-9 shrink-0 sm:h-12 sm:w-12" />
-            <span className="flex flex-col leading-none">
-              <span className="text-base font-semibold tracking-tight sm:text-xl">ARCHSTRUC</span>
-              <span className="text-[10px] uppercase tracking-[0.3em] text-[#358CB8] sm:text-xs">Group</span>
+          <Link href="/" className="flex min-w-0 items-center gap-2 sm:gap-3" onClick={() => setMobileOpen(false)}>
+            <img src="/archstruc-icon.png" alt="Archstruc Group" className="h-8 w-8 shrink-0 sm:h-12 sm:w-12" />
+            <span className="flex min-w-0 flex-col justify-center leading-none pb-0.5">
+              <span className="truncate text-sm font-semibold tracking-tight xs:text-base sm:text-xl">ARCHSTRUC</span>
+              <span className="text-[9px] uppercase tracking-[0.25em] text-[#358CB8] sm:text-xs sm:tracking-[0.3em]">Group</span>
             </span>
           </Link>
 
-          <div className="hidden items-center gap-10 lg:flex">
+          <div className="hidden items-start gap-10 pt-1 lg:flex">
             {["Home", "Projects", "Contacts", "Services"].map((item) => (
               <Link
                 key={item}
                 href={item === "Home" ? "/" : `/${item.toLowerCase()}`}
-                className="nav-link relative text-base font-medium text-[#358CB8] transition-all duration-200 hover:text-[#9CCBDA] after:absolute after:left-0 after:-bottom-1 after:h-[1.5px] after:w-0 after:bg-[#358CB8] after:transition-all after:duration-300 hover:after:w-full"
+                className="nav-link relative -translate-y-0.5 text-base font-medium text-[#358CB8] transition-all duration-200 hover:text-[#9CCBDA] after:absolute after:left-0 after:-bottom-1 after:h-[1.5px] after:w-0 after:bg-[#358CB8] after:transition-all after:duration-300 hover:after:w-full"
               >
                 {item}
               </Link>
@@ -296,7 +263,7 @@ export default function Home() {
             onClick={() => setMobileOpen((p) => !p)}
             aria-label="Toggle menu"
             aria-expanded={mobileOpen}
-            className="flex h-10 w-10 items-center justify-center rounded-full border border-white/15 transition hover:scale-105 lg:hidden"
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-white/15 transition active:scale-95 hover:scale-105 lg:hidden"
           >
             <div className="flex h-4 w-5 flex-col justify-between">
               <span className={`h-px w-full bg-white transition-all duration-300 ${mobileOpen ? "translate-y-[7px] rotate-45" : ""}`} />
@@ -310,14 +277,14 @@ export default function Home() {
       {/* Mobile menu */}
       {mobileOpen && (
         <div className="fixed inset-0 z-40 bg-black/80 backdrop-blur-md">
-          <div className="flex h-full flex-col px-9 pt-28 sm:pt-32">
-            <nav className="flex flex-col gap-7">
+          <div className="safe-bottom flex h-full flex-col overflow-y-auto px-6 pt-24 sm:px-9 sm:pt-32">
+            <nav className="flex flex-col gap-1">
               {["Home", "Projects", "Contacts", "Services"].map((item) => (
                 <Link
                   key={item}
                   href={item === "Home" ? "/" : `/${item.toLowerCase()}`}
                   onClick={() => setMobileOpen(false)}
-                  className="text-xl font-light text-white/90 transition-colors hover:text-[#358CB8]"
+                  className="border-b border-white/5 py-4 text-xl font-light text-white/90 transition-colors active:text-[#358CB8] hover:text-[#358CB8]"
                 >
                   {item}
                 </Link>
@@ -326,7 +293,7 @@ export default function Home() {
             <Link
               href="/contacts"
               onClick={() => setMobileOpen(false)}
-              className="mt-10 w-fit rounded-full border border-[#358CB8]/40 bg-[#358CB8]/10 px-8 py-3 text-base text-[#358CB8] transition hover:bg-[#358CB8]/20"
+              className="mt-8 w-full rounded-full border border-[#358CB8]/40 bg-[#358CB8]/10 px-8 py-4 text-center text-base text-[#358CB8] transition active:scale-[0.98] hover:bg-[#358CB8]/20"
             >
               Get A Quote
             </Link>
@@ -334,12 +301,11 @@ export default function Home() {
         </div>
       )}
 
-      {/* ── Projects scroller ── */}
+      {/* ── Featured Projects — full viewport ── */}
       <section className="relative h-[100dvh] w-full overflow-hidden">
         <div
           ref={projectScrollerRef}
           onScroll={handleProjectScroll}
-          // Pause auto-scroll on touch start, resume after touch ends
           onTouchStart={() => {
             userInteractingRef.current = true;
             if (interactionTimeoutRef.current) clearTimeout(interactionTimeoutRef.current);
@@ -377,26 +343,26 @@ export default function Home() {
           })}
         </div>
 
-        {/* Title */}
-        <div className="pointer-events-none absolute bottom-20 left-4 z-20 sm:bottom-24 lg:left-10">
-          <p
-            key={projectIndex}
-            className={`text-base font-light tracking-wide text-white sm:text-lg md:text-xl ${titleVisible ? "title-in" : "opacity-0"}`}
-          >
-            {projects[projectIndex]?.title}
-          </p>
-        </div>
-
         {/* Eyebrow */}
         <div className="pointer-events-none absolute top-20 left-1/2 z-10 -translate-x-1/2 flex flex-col items-center gap-2 sm:top-24">
-          <p className="text-[10px] uppercase tracking-[0.4em] text-[#358CB8]/80 font-medium sm:text-[11px] sm:tracking-[0.5em]">
+          <p className="text-[9px] uppercase tracking-[0.3em] text-[#358CB8]/80 font-medium sm:text-[11px] sm:tracking-[0.5em]">
             Featured Projects
           </p>
           <div className="h-px w-8 bg-gradient-to-r from-transparent via-[#358CB8]/60 to-transparent" />
         </div>
 
-        {/* Counter */}
-        <div className="pointer-events-none absolute bottom-20 right-4 z-10 text-xs tracking-[0.25em] text-white/50 sm:bottom-24 sm:right-8 sm:text-sm sm:tracking-[0.3em]">
+        {/* Project title — raised well clear of the dot nav / social icons */}
+        <div className="safe-bottom pointer-events-none absolute bottom-36 left-4 right-16 z-20 sm:bottom-40 sm:right-auto lg:left-10">
+          <p
+            key={projectIndex}
+            className={`truncate text-sm font-light tracking-wide text-white xs:text-base sm:text-lg md:text-xl ${titleVisible ? "title-in" : "opacity-0"}`}
+          >
+            {projects[projectIndex]?.title}
+          </p>
+        </div>
+
+        {/* Counter — raised to match the title */}
+        <div className="safe-bottom pointer-events-none absolute bottom-36 right-4 z-10 text-[11px] tracking-[0.2em] text-white/50 sm:bottom-40 sm:right-8 sm:text-sm sm:tracking-[0.3em]">
           {String(projectIndex + 1).padStart(2, "0")}
           <span className="mx-1.5 text-[#358CB8] sm:mx-2">/</span>
           {String(projects.length).padStart(2, "0")}
@@ -423,11 +389,11 @@ export default function Home() {
         </button>
 
         {/* Mobile dots + arrows */}
-        <div className="pointer-events-none absolute bottom-6 left-1/2 z-20 flex -translate-x-1/2 items-center gap-3">
+        <div className="safe-bottom pointer-events-none absolute bottom-6 left-1/2 z-20 flex -translate-x-1/2 items-center gap-3">
           <button
             onClick={() => goToProject(Math.max(projectIndex - 1, 0))}
             aria-label="Previous project"
-            className="liquid-glass pointer-events-auto flex h-9 w-9 items-center justify-center rounded-full transition active:scale-95"
+            className="liquid-glass pointer-events-auto flex h-10 w-10 items-center justify-center rounded-full transition active:scale-95"
           >
             <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M15 18l-6-6 6-6" strokeLinecap="round" strokeLinejoin="round" />
@@ -450,47 +416,12 @@ export default function Home() {
           <button
             onClick={() => goToProject(Math.min(projectIndex + 1, projects.length - 1))}
             aria-label="Next project"
-            className="liquid-glass liquid-glass-gold pointer-events-auto flex h-9 w-9 items-center justify-center rounded-full text-[#358CB8] transition active:scale-95"
+            className="liquid-glass liquid-glass-gold pointer-events-auto flex h-10 w-10 items-center justify-center rounded-full text-[#358CB8] transition active:scale-95"
           >
             <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M9 18l6-6-6-6" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </button>
-        </div>
-      </section>
-
-      {/* ── Hero ── */}
-      <section className="relative flex min-h-[100dvh] items-end pb-10 pt-16 sm:pt-20">
-        <div className="relative z-20 mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="max-w-2xl">
-            <p className="mb-3 text-xs uppercase tracking-[0.35em] text-[#358CB8] sm:mb-4 sm:text-sm">
-              Engineering Excellence
-            </p>
-            <h1 className="text-2xl font-medium leading-[1.05] tracking-tight sm:text-3xl xl:text-4xl">
-              {slides[active].title}
-            </h1>
-            <p className="mt-4 max-w-xl text-sm leading-7 text-white/70 sm:mt-6 sm:text-base">
-              {slides[active].subtitle}
-            </p>
-            <div className="mt-7 flex flex-wrap gap-4 sm:mt-9 sm:gap-5">
-              <Link
-                href="/projects"
-                className="liquid-glass liquid-glass-gold rounded-xl px-6 py-3 text-sm font-medium text-[#358CB8] transition hover:scale-[1.02] active:scale-[0.98]"
-              >
-                Explore Projects
-              </Link>
-              <Link
-                href="/contact"
-                className="liquid-glass rounded-full px-6 py-3 text-sm transition hover:scale-[1.02] active:scale-[0.98]"
-              >
-                Contact Us
-              </Link>
-            </div>
-          </div>
-        </div>
-
-        <div className="absolute bottom-10 left-4 z-20 text-sm tracking-[0.3em] text-white/60 lg:left-8">
-          0{active + 1}<span className="mx-2 text-[#358CB8]">/</span>0{slides.length}
         </div>
       </section>
     </main>
