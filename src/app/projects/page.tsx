@@ -230,6 +230,7 @@ export default function Projects() {
                       alt={project.title}
                       fill
                       sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                      quality={85}
                       unoptimized={process.env.NODE_ENV !== "production"}
                       className="object-cover transition-transform duration-[1600ms] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.06]"
                     />

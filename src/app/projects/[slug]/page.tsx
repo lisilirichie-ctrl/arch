@@ -248,7 +248,9 @@ export default function ProjectPage() {
                   alt={`${project.title} ${i + 1}`}
                   fill
                   sizes="(max-width: 768px) 100vw, 70vw"
+                  quality={90}
                   priority={i === 0}
+                  loading={i === 0 ? undefined : "eager"}
                   unoptimized={process.env.NODE_ENV !== "production"}
                   className={`object-cover ${i === activeIndex ? "kenburns-active" : ""}`}
                 />

@@ -3,11 +3,15 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { Montserrat } from "next/font/google";
+
+// Brand font — matches the Archstruc logo lettering
+const brandFont = Montserrat({ subsets: ["latin"], weight: ["500", "600", "700"] });
 
 const PROJECT_DURATION = 8000;
 
 const projects = [
-  { slug: "km-residence-tatu-city", title: "K.M Residence", image: "https://mtmyqbymrcgjnjyjyfgp.supabase.co/storage/v1/object/public/project-images/covers/1787905838471-hlk59kxkyfd.webp" },
+  { slug: "km-residence-tatu-city", title: "K.M Residence", image: "https://mtmyqbymrcgjnjyjyfgp.supabase.co/storage/v1/object/public/project-images/covers/1793874242550-p0wzid39pvl.webp" },
   { slug: "lb-residence", title: "L.B Residence", image: "https://mtmyqbymrcgjnjyjyfgp.supabase.co/storage/v1/object/public/project-images/covers/1787906253182-m2axrc6bcel.webp" },
   { slug: "amani-residence", title: "Amani Residence", image: "https://mtmyqbymrcgjnjyjyfgp.supabase.co/storage/v1/object/public/project-images/covers/1787174436737-o1w27svfbyr.jpg" },
   { slug: "m.l residence", title: "M.L Residence", image: "https://mtmyqbymrcgjnjyjyfgp.supabase.co/storage/v1/object/public/project-images/covers/1787171786491-v3ptlzjkfnd.png" },
@@ -93,15 +97,6 @@ function CustomCursor({ disabled }: { disabled: boolean }) {
   );
 }
 
-function usePreloadProjectImages() {
-  useEffect(() => {
-    projects.forEach((project) => {
-      const img = new window.Image();
-      img.src = project.image;
-    });
-  }, []);
-}
-
 export default function Home() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [projectIndex, setProjectIndex] = useState(0);
@@ -112,8 +107,6 @@ export default function Home() {
   const userInteractingRef = useRef(false);
   const interactionTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isTouch = useIsTouchDevice();
-
-  usePreloadProjectImages();
 
   // Auto-scroll featured projects
   useEffect(() => {
@@ -189,7 +182,7 @@ export default function Home() {
         html, body { overscroll-behavior: none; }
         @keyframes kenBurnsZoom {
           0%   { transform: scale(1); }
-          100% { transform: scale(1.15); }
+          100% { transform: scale(1.07); }
         }
         .project-zoom {
           animation: kenBurnsZoom 13s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
@@ -222,20 +215,14 @@ export default function Home() {
         ))}
       </div>
 
-      {/* ── Navbar — true glassmorphism ── */}
-      <nav
-        className="fixed top-0 left-0 z-50 w-full border-b border-white/15 backdrop-blur-xl backdrop-saturate-150"
-        style={{
-          background: "linear-gradient(180deg, rgba(15,25,32,0.45) 0%, rgba(15,25,32,0.15) 100%)",
-          boxShadow: "inset 0 1px 0 0 rgba(255,255,255,0.12)",
-        }}
-      >
+      {/* ── Navbar — plain transparent, no glass ── */}
+      <nav className="fixed top-0 left-0 z-50 w-full">
         <div className="flex h-16 w-full items-center justify-between px-4 sm:h-20 sm:px-6 lg:px-10">
           <Link href="/" className="flex min-w-0 items-center gap-2 sm:gap-3" onClick={() => setMobileOpen(false)}>
-            <img src="/archstruc-icon.png" alt="Archstruc Group" className="h-8 w-8 shrink-0 sm:h-12 sm:w-12" />
-            <span className="flex min-w-0 flex-col justify-center leading-none pb-0.5">
-              <span className="truncate text-sm font-semibold tracking-tight xs:text-base sm:text-xl">ARCHSTRUC</span>
-              <span className="text-[9px] uppercase tracking-[0.25em] text-[#358CB8] sm:text-xs sm:tracking-[0.3em]">Group</span>
+            <img src="/archstruc-icon.png" alt="Archstruc Group" className="h-9 w-9 shrink-0 rounded-lg bg-white object-contain sm:h-12 sm:w-12" />
+            <span className={`${brandFont.className} flex min-w-0 flex-col items-center justify-center leading-none pb-0.5`}>
+              <span className="truncate text-sm font-bold uppercase tracking-[0.14em] xs:text-base sm:text-xl">ARCHSTRUC</span>
+              <span className="mt-1 text-[9px] font-medium uppercase tracking-[0.4em] text-[#358CB8] sm:text-xs sm:tracking-[0.45em]">Group</span>
             </span>
           </Link>
 
@@ -331,11 +318,12 @@ export default function Home() {
                   src={project.image}
                   alt={project.title}
                   fill
-                  priority={true}
+                  priority={i === 0}
+                  loading={i === 0 ? undefined : "eager"}
+                  quality={90}
                   sizes="100vw"
                   unoptimized={process.env.NODE_ENV !== "production"}
                   className={`object-cover object-center ${isActive ? "project-zoom" : ""}`}
-                  style={{ willChange: "transform" }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/30" />
               </Link>

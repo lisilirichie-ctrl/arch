@@ -53,7 +53,9 @@ function isLockedOut(): boolean {
   return count >= MAX_AUTH_ATTEMPTS;
 }
 
-async function compressImage(file: File, maxDimension = 1600, quality = 0.8): Promise<File> {
+const MAX_UPLOAD_BYTES = 600 * 1024; // target size per image after compression
+
+async function compressImage(file: File, maxDimension = 2200, startQuality = 0.88): Promise<File> {
   if (!file.type.startsWith("image/") || file.type === "image/gif") return file;
   const bitmap = await createImageBitmap(file);
   const scale = Math.min(1, maxDimension / Math.max(bitmap.width, bitmap.height));
@@ -63,8 +65,17 @@ async function compressImage(file: File, maxDimension = 1600, quality = 0.8): Pr
   canvas.width = width; canvas.height = height;
   const ctx = canvas.getContext("2d");
   if (!ctx) return file;
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = "high";
   ctx.drawImage(bitmap, 0, 0, width, height);
-  const blob: Blob | null = await new Promise((resolve) => canvas.toBlob(resolve, "image/webp", quality));
+  // Start at high quality, step down only if the file is still larger than the target.
+  let quality = startQuality;
+  let blob: Blob | null = null;
+  while (quality >= 0.7) {
+    blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/webp", quality));
+    if (!blob || blob.size <= MAX_UPLOAD_BYTES) break;
+    quality -= 0.04;
+  }
   if (!blob) return file;
   const newName = file.name.replace(/\.[^.]+$/, "") + ".webp";
   return new File([blob], newName, { type: "image/webp" });
