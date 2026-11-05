@@ -832,10 +832,12 @@ function DraggableThumb({ src, isNew, onRemove, index, onDragStart, onDragOver, 
       <img src={src} alt="" className="h-full w-full object-cover pointer-events-none" />
       <div className="absolute left-1.5 top-1.5 rounded px-1.5 py-0.5 opacity-0 transition-opacity group-hover:opacity-100 pointer-events-none"
         style={{ backgroundColor: "rgba(0,0,0,0.72)", color: "#fff", fontSize: 9, letterSpacing: "0.04em" }}>⠿ drag</div>
-      {isNew && <span className="absolute right-1.5 top-1.5 rounded bg-blue-500 px-1.5 py-0.5 text-[9px] font-bold text-white pointer-events-none">NEW</span>}
-      <button type="button" onClick={(e) => { e.stopPropagation(); onRemove(); }}
-        className="absolute inset-0 flex items-center justify-center bg-black/55 opacity-0 transition-opacity group-hover:opacity-100" title="Remove">
-        <X size={16} color="#fff" />
+      {isNew && <span className="absolute bottom-1.5 left-1.5 rounded bg-blue-500 px-1.5 py-0.5 text-[9px] font-bold text-white pointer-events-none">NEW</span>}
+      {/* Small corner button — only this tiny target deletes, so dragging/moving never removes by mistake */}
+      <button type="button" draggable={false} onClick={(e) => { e.stopPropagation(); onRemove(); }}
+        className="absolute right-1.5 top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-black/70 opacity-100 transition-all hover:bg-red-600 md:opacity-0 md:group-hover:opacity-100"
+        title="Remove image" aria-label="Remove image">
+        <X size={13} color="#fff" />
       </button>
     </div>
   );
@@ -870,6 +872,8 @@ function ProjectForm({ mode, existingProject, onCancel, onSaved }: {
   const [overIndex, setOverIndex] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [pendingRemoveIndex, setPendingRemoveIndex] = useState<number | null>(null);
+  const [removing, setRemoving] = useState(false);
 
   const readFile = (file: File): Promise<string> => new Promise((res, rej) => {
     const r = new FileReader();
@@ -920,6 +924,14 @@ function ProjectForm({ mode, existingProject, onCancel, onSaved }: {
     setGallery((prev) => prev.filter((_, i) => i !== index));
   };
 
+  const confirmRemoveImage = async () => {
+    if (pendingRemoveIndex === null) return;
+    setRemoving(true);
+    await removeGalleryItem(pendingRemoveIndex);
+    setRemoving(false);
+    setPendingRemoveIndex(null);
+  };
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!title.trim() || !location.trim()) { setError("Jaza Title na Location kabla ya kusave."); return; }
@@ -962,6 +974,16 @@ function ProjectForm({ mode, existingProject, onCancel, onSaved }: {
   const newCount = gallery.filter((g) => g.kind === "new").length;
 
   return (
+    <>
+    <ConfirmDialog
+      open={pendingRemoveIndex !== null}
+      title="Delete this image?"
+      description="Una uhakika unataka kufuta picha hii? Hatua hii haiwezi kurudishwa."
+      confirmLabel="Delete image"
+      busy={removing}
+      onConfirm={confirmRemoveImage}
+      onCancel={() => setPendingRemoveIndex(null)}
+    />
     <form onSubmit={handleSubmit} className="w-full max-w-2xl rounded-2xl p-5 sm:p-8" style={{ border: `1px solid ${C.border}`, backgroundColor: C.card }}>
       <div className="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Field label="Project title" placeholder="e.g. Riverside Residences" value={title} onChange={setTitle} />
@@ -1013,7 +1035,7 @@ function ProjectForm({ mode, existingProject, onCancel, onSaved }: {
           <div className="mb-3 grid grid-cols-3 gap-2 sm:grid-cols-4">
             {gallery.map((item, i) => (
               <DraggableThumb key={item.kind === "existing" ? (item.img.id ?? `ex-${i}`) : `new-${i}-${(item as any).file?.name}`}
-                index={i} src={item.preview} isNew={item.kind === "new"} onRemove={() => removeGalleryItem(i)}
+                index={i} src={item.preview} isNew={item.kind === "new"} onRemove={() => setPendingRemoveIndex(i)}
                 onDragStart={onThumbDragStart} onDragOver={onThumbDragOver} onDrop={onThumbDrop} onDragEnd={onThumbDragEnd}
                 isDragging={draggingIndex === i} isOver={overIndex === i && draggingIndex !== i} />
             ))}
@@ -1036,5 +1058,6 @@ function ProjectForm({ mode, existingProject, onCancel, onSaved }: {
         </button>
       </div>
     </form>
+    </>
   );
 }
